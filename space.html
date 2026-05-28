@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>חלל - הימנע מהאסטרואידים 🚀</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { overflow: hidden; overscroll-behavior: none; }
+
+        body {
+            background: linear-gradient(135deg, #000010, #001833, #000010);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+            padding: 8px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3vw, 1.7em);
+            margin-bottom: 6px;
+            color: #5cc8ff;
+            text-shadow: 0 0 18px #5cc8ff;
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .status-pill {
+            font-size: clamp(0.8em, 2vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid #5cc8ff;
+            border-radius: 25px;
+        }
+        #score   { color: #ffdd57; font-weight: bold; }
+        #current-player { color: #5cc8ff; font-weight: bold; }
+        #lives   { color: #ff5577; font-weight: bold; }
+
+        #game-wrap {
+            position: relative;
+            /* width / height set by resizeGame() below to the largest square that fits */
+            width: 300px;
+            height: 300px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #5cc8ff;
+            border-radius: 12px;
+            box-shadow: 0 0 35px rgba(92,200,255,0.4);
+            display: block;
+            touch-action: none;
+            background: #000010;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(0,4,16,0.95);
+            border-radius: 10px;
+            padding: 14px;
+            overflow-y: auto;
+        }
+        #overlay h2 {
+            font-size: clamp(1.2em, 4vw, 2em);
+            color: #ffdd57;
+            text-shadow: 0 0 18px #ffdd57;
+            margin-bottom: 6px;
+        }
+        #overlay p {
+            font-size: clamp(0.85em, 2.3vw, 1.05em);
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .name-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 10px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: clamp(1em, 2.5vw, 1.15em);
+            font-family: Arial, sans-serif;
+            border: 2px solid #5cc8ff;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            outline: none;
+        }
+        .name-input::placeholder { color: rgba(255,255,255,0.4); }
+        .name-input:focus { background: rgba(255,255,255,0.18); border-color: #ffdd57; }
+
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 6px;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 8px;
+        }
+        .player-btn {
+            background: linear-gradient(135deg, #5cc8ff, #2179c5);
+            color: #001833;
+            border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.9em, 2.3vw, 1.05em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(92,200,255,0.3);
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .player-btn:hover, .player-btn:active { transform: scale(1.08); }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #ffdd57, #ffb700);
+            color: #001833;
+            border: none;
+            padding: clamp(8px, 1.8vw, 12px) clamp(20px, 4vw, 28px);
+            font-size: clamp(0.95em, 2.4vw, 1.15em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255,221,87,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: clamp(8px, 1.8vw, 12px) clamp(20px, 4vw, 28px);
+            font-size: clamp(0.9em, 2.2vw, 1.05em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(92,200,255,0.4);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin: 6px 0 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .leaderboard-title { color: #ffdd57; font-size: clamp(0.85em, 2.1vw, 1em); margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: clamp(0.8em, 2vw, 0.95em); }
+        .leaderboard td { padding: 3px 5px; color: #ddd; }
+        .leaderboard tr.highlight td { background: rgba(255,221,87,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #ffdd57; font-weight: bold; width: 50px; }
+
+        #mute {
+            position: fixed;
+            top: 12px; left: 12px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid rgba(92,200,255,0.4);
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: rgba(92,200,255,0.3); }
+
+        /* On-screen D-pad for touch devices */
+        #dpad {
+            display: none;
+            margin-top: 10px;
+            grid-template-columns: 58px 58px 58px;
+            grid-template-rows: 58px 58px 58px;
+            gap: 5px;
+            direction: ltr;
+        }
+        .dbtn {
+            background: rgba(92,200,255,0.15);
+            border: 2px solid #5cc8ff;
+            color: #5cc8ff;
+            font-size: 1.4em;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .dbtn:active { background: rgba(92,200,255,0.5); transform: scale(0.95); }
+        #dbtn-up    { grid-column: 2; grid-row: 1; }
+        #dbtn-left  { grid-column: 1; grid-row: 2; }
+        #dbtn-right { grid-column: 3; grid-row: 2; }
+        #dbtn-down  { grid-column: 2; grid-row: 3; }
+
+        #hint {
+            margin-top: 6px;
+            color: rgba(255,255,255,0.55);
+            font-size: clamp(0.75em, 1.9vw, 0.9em);
+            text-align: center;
+            padding: 0 10px;
+        }
+        @media (pointer: coarse), (max-width: 768px) {
+            #dpad { display: grid; }
+            #hint-desktop { display: none; }
+        }
+        @media (pointer: fine) and (min-width: 769px) {
+            #hint-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק / הפעל סאונד">🔊</button>
+
+<h1>🚀 חלל - הימנע מהאסטרואידים 🌌</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">❤️ <span id="lives">3</span></div>
+    <div class="status-pill">⚡ ניקוד: <span id="score">0</span></div>
+    <div class="status-pill">🎯 שלב: <span id="level">1</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<div id="dpad">
+    <button class="dbtn" id="dbtn-up">⬆️</button>
+    <button class="dbtn" id="dbtn-left">⬅️</button>
+    <button class="dbtn" id="dbtn-right">➡️</button>
+    <button class="dbtn" id="dbtn-down">⬇️</button>
+</div>
+
+<p id="hint">
+    <span id="hint-desktop">⬆️⬇️⬅️➡️ או WASD לתזוזה — הימנע מהאסטרואידים!</span>
+    <span id="hint-mobile">👆 חצים על המסך לתזוזה — הימנע מהאסטרואידים!</span>
+</p>
+
+<script>
+    // ================== Setup ==================
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const scoreEl  = document.getElementById('score');
+    const livesEl  = document.getElementById('lives');
+    const levelEl  = document.getElementById('level');
+    const currentPlayerEl = document.getElementById('current-player');
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ================== Levels ==================
+    const LEVELS = [
+        { num: 1, name: 'שלב 1 · קל',           minDodged: 0,   asteroidSpeed: 110, spawnMs: 1400, maxAsteroids: 4,  color: '#9bff66' },
+        { num: 2, name: 'שלב 2 · קל-בינוני',     minDodged: 10,  asteroidSpeed: 140, spawnMs: 1100, maxAsteroids: 5,  color: '#cffd5e' },
+        { num: 3, name: 'שלב 3 · בינוני',        minDodged: 25,  asteroidSpeed: 170, spawnMs: 900,  maxAsteroids: 6,  color: '#ffdd57' },
+        { num: 4, name: 'שלב 4 · די קשה',        minDodged: 45,  asteroidSpeed: 200, spawnMs: 750,  maxAsteroids: 7,  color: '#ffb347' },
+        { num: 5, name: 'שלב 5 · קשה',          minDodged: 75,  asteroidSpeed: 240, spawnMs: 600,  maxAsteroids: 8,  color: '#ff7733' },
+        { num: 6, name: 'שלב 6 · קשה מאוד',     minDodged: 120, asteroidSpeed: 280, spawnMs: 480,  maxAsteroids: 10, color: '#ff3366' },
+        { num: 7, name: 'שלב 7 · בטירוף! 🔥',    minDodged: 180, asteroidSpeed: 330, spawnMs: 380,  maxAsteroids: 12, color: '#c92a52' },
+    ];
+    function getLevelFor(score) {
+        for (let i = LEVELS.length - 1; i >= 0; i--) {
+            if (score >= LEVELS[i].minDodged) return LEVELS[i];
+        }
+        return LEVELS[0];
+    }
+    function nextLevelGoal(level) {
+        const next = LEVELS.find(l => l.num === level.num + 1);
+        return next ? next.minDodged : null;
+    }
+
+    // ================== Scoreboard ==================
+    const STORAGE_KEY = 'rom_space_scores_v1';
+    let currentPlayer = null;
+
+    function loadScores() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch { return {}; }
+    }
+    function saveResult(player, finalScore) {
+        const scores = loadScores();
+        const e = scores[player] || { best: 0, games: 0, last: 0 };
+        if (finalScore > e.best) e.best = finalScore;
+        e.games = (e.games || 0) + 1;
+        e.last  = finalScore;
+        e.lastPlayed = Date.now();
+        scores[player] = e;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+    }
+    function allPlayersSorted() {
+        return Object.entries(loadScores())
+            .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+            .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+    }
+    function leaderboardHtml(highlight = null) {
+        const entries = allPlayersSorted().slice(0, 10);
+        if (entries.length === 0) {
+            return `
+                <div class="leaderboard">
+                    <div class="leaderboard-title">🏆 טבלת השיאים</div>
+                    <p style="color:#888;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! 🚀</p>
+                </div>
+            `;
+        }
+        const medals = ['🥇', '🥈', '🥉'];
+        const rows = entries.map((e, i) => {
+            const rank = i < 3 ? medals[i] : `${i + 1}.`;
+            const clsAttr = e.name === highlight ? ' class="highlight"' : '';
+            return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+        }).join('');
+        return `
+            <div class="leaderboard">
+                <div class="leaderboard-title">🏆 טבלת השיאים — הטופ ${entries.length}</div>
+                <table>${rows}</table>
+            </div>
+        `;
+    }
+
+    // ================== Game state ==================
+    let running = false;
+    let rafId = null;
+    let ship, asteroids, stars, particles, popups;
+    let score, lastSpawn, lastT, currentLevel, levelBanner, gracePeriod;
+
+    function spawnStars() {
+        stars = [];
+        for (let i = 0; i < 90; i++) {
+            stars.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                z: Math.random() * 0.7 + 0.3,
+                size: Math.random() * 1.8 + 0.5,
+            });
+        }
+    }
+
+    function resetGame() {
+        ship = {
+            x: W/2, y: H * 0.78,
+            vx: 0, vy: 0,
+            r: 16,
+            speed: 320,
+            lives: 3,
+            maxLives: 3,
+            invuln: 0,
+        };
+        asteroids = [];
+        particles = [];
+        popups = [];
+        spawnStars();
+        score = 0;
+        lastSpawn = performance.now();
+        gracePeriod = 1.0;   // 1 second free before first asteroid
+        currentLevel = LEVELS[0];
+        levelBanner  = { text: '🚀 ' + currentLevel.name, life: 1.8 };
+        scoreEl.textContent = '0';
+        livesEl.textContent = '❤️❤️❤️';
+        updateLevelUi();
+    }
+    function updateLevelUi() {
+        const goal = nextLevelGoal(currentLevel);
+        levelEl.textContent = goal !== null
+            ? `${currentLevel.num} (${score}/${goal})`
+            : `${currentLevel.num} 🔥`;
+        levelEl.style.color = currentLevel.color;
+    }
+    function livesText() {
+        return '❤️'.repeat(ship.lives) || '💀';
+    }
+
+    // ================== Input ==================
+    const keys = { up: false, down: false, left: false, right: false };
+
+    document.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if (k === 'arrowup'    || k === 'w') keys.up    = true;
+        if (k === 'arrowdown'  || k === 's') keys.down  = true;
+        if (k === 'arrowleft'  || k === 'a') keys.left  = true;
+        if (k === 'arrowright' || k === 'd') keys.right = true;
+        if (k.startsWith('arrow')) e.preventDefault();
+    });
+    document.addEventListener('keyup', e => {
+        const k = e.key.toLowerCase();
+        if (k === 'arrowup'    || k === 'w') keys.up    = false;
+        if (k === 'arrowdown'  || k === 's') keys.down  = false;
+        if (k === 'arrowleft'  || k === 'a') keys.left  = false;
+        if (k === 'arrowright' || k === 'd') keys.right = false;
+    });
+
+    // On-screen D-pad
+    const dpadMap = {
+        'dbtn-up':    'up',
+        'dbtn-down':  'down',
+        'dbtn-left':  'left',
+        'dbtn-right': 'right',
+    };
+    Object.keys(dpadMap).forEach(id => {
+        const el = document.getElementById(id);
+        const dir = dpadMap[id];
+        const on  = (e) => { e.preventDefault(); keys[dir] = true; };
+        const off = (e) => { e.preventDefault(); keys[dir] = false; };
+        el.addEventListener('touchstart',  on,  { passive: false });
+        el.addEventListener('touchend',    off, { passive: false });
+        el.addEventListener('touchcancel', off, { passive: false });
+        el.addEventListener('mousedown',   on);
+        el.addEventListener('mouseup',     off);
+        el.addEventListener('mouseleave',  off);
+    });
+
+    function getMoveVec() {
+        let dx = 0, dy = 0;
+        if (keys.up)    dy -= 1;
+        if (keys.down)  dy += 1;
+        if (keys.left)  dx -= 1;
+        if (keys.right) dx += 1;
+        if (dx !== 0 && dy !== 0) {
+            const len = Math.hypot(dx, dy);
+            dx /= len; dy /= len;
+        }
+        return { x: dx, y: dy };
+    }
+
+    // ================== Sound ==================
+    let audioCtx = null;
+    let muted = false;
+
+    function ensureAudio() {
+        if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) audioCtx = new Ctx();
+        }
+        return audioCtx;
+    }
+    function tone(freq, duration, type='square', vol=0.1, delay=0) {
+        if (muted) return;
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const t0 = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, t0);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t0); osc.stop(t0 + duration);
+    }
+    function playHit()       { tone(120, 0.35, 'sawtooth', 0.18, 0); tone(80, 0.45, 'sawtooth', 0.16, 0.05); }
+    function playDodge()     { tone(800, 0.04, 'triangle', 0.06, 0); }
+    function playStart()     {
+        tone(523, 0.10, 'triangle', 0.18, 0);
+        tone(659, 0.10, 'triangle', 0.18, 0.10);
+        tone(784, 0.16, 'triangle', 0.18, 0.20);
+    }
+    function playGameOver()  {
+        tone(392, 0.18, 'sawtooth', 0.16, 0);
+        tone(294, 0.18, 'sawtooth', 0.16, 0.18);
+        tone(196, 0.35, 'sawtooth', 0.16, 0.36);
+    }
+    function playLevelUp() {
+        tone(523, 0.10, 'square', 0.16, 0);
+        tone(659, 0.10, 'square', 0.16, 0.10);
+        tone(784, 0.10, 'square', 0.16, 0.20);
+        tone(1047, 0.22, 'square', 0.18, 0.30);
+    }
+
+    // Space-y background music (low + airy)
+    const MUSIC_NOTES = [262, 330, 392, 330, 262, 330, 392, 494, 440, 392, 330, 262, 294, 330, 392, 330];
+    const BASS_NOTES  = [ 65,  65,  65,  65,  65,  65,  65,  65,  87,  87,  87,  87,  73,  73,  73,  73];
+    const NOTE_MS = 260;
+    let musicTimer = null, musicStep = 0;
+    function playMusicTick() {
+        if (muted) { musicStep++; return; }
+        const i = musicStep % MUSIC_NOTES.length;
+        tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'sine', 0.05, 0);
+        if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.06, 0);
+        musicStep++;
+    }
+    function startMusic() {
+        stopMusic(); musicStep = 0;
+        playMusicTick();
+        musicTimer = setInterval(playMusicTick, NOTE_MS);
+    }
+    function stopMusic() {
+        if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+    }
+
+    // ================== Asteroid + particles ==================
+    function spawnAsteroid() {
+        if (asteroids.length >= currentLevel.maxAsteroids) return;
+        const r = 16 + Math.random() * 18;
+        const bumps = [];
+        for (let i = 0; i < 8; i++) bumps.push(Math.random() * 0.25);
+        asteroids.push({
+            x: r + Math.random() * (W - r * 2),
+            y: -r - 10,
+            vx: (Math.random() - 0.5) * 60,
+            vy: currentLevel.asteroidSpeed + Math.random() * 50,
+            r,
+            rot: Math.random() * Math.PI * 2,
+            rotSpeed: (Math.random() - 0.5) * 2,
+            bumps,
+        });
+    }
+
+    function spawnExplosion(x, y) {
+        for (let i = 0; i < 18; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = 80 + Math.random() * 200;
+            particles.push({
+                x, y,
+                vx: Math.cos(a) * s,
+                vy: Math.sin(a) * s,
+                life: 0.5 + Math.random() * 0.4,
+                color: Math.random() < 0.5 ? '#ffce5e' : '#ff7733',
+                r: 2 + Math.random() * 3,
+            });
+        }
+    }
+
+    function spawnEngineParticle() {
+        particles.push({
+            x: ship.x + (Math.random() - 0.5) * 6,
+            y: ship.y + 14,
+            vx: (Math.random() - 0.5) * 30,
+            vy: 80 + Math.random() * 60,
+            life: 0.3 + Math.random() * 0.2,
+            color: Math.random() < 0.4 ? '#ffce5e' : '#ff7733',
+            r: 1.5 + Math.random() * 1.5,
+        });
+    }
+
+    function popup(text, x, y, color = '#ffdd57') {
+        popups.push({ text, x, y, vy: -40, life: 0.8, color });
+    }
+
+    // ================== Update ==================
+    function update(dt) {
+        // ship movement
+        const m = getMoveVec();
+        ship.x += m.x * ship.speed * dt;
+        ship.y += m.y * ship.speed * dt;
+        ship.x = Math.max(ship.r, Math.min(W - ship.r, ship.x));
+        ship.y = Math.max(ship.r, Math.min(H - ship.r, ship.y));
+        ship.invuln = Math.max(0, ship.invuln - dt);
+
+        // engine particles (only every other frame, lightweight)
+        if (Math.random() < 0.7) spawnEngineParticle();
+
+        // stars
+        for (const s of stars) {
+            s.y += 60 * s.z * dt;
+            if (s.y > H + 2) {
+                s.y = -2;
+                s.x = Math.random() * W;
+            }
+        }
+
+        // spawn asteroids after grace
+        gracePeriod = Math.max(0, gracePeriod - dt);
+        if (gracePeriod <= 0 && performance.now() - lastSpawn > currentLevel.spawnMs) {
+            spawnAsteroid();
+            lastSpawn = performance.now();
+        }
+
+        // asteroids: move, dodge counting, collision
+        for (let i = asteroids.length - 1; i >= 0; i--) {
+            const a = asteroids[i];
+            a.x += a.vx * dt;
+            a.y += a.vy * dt;
+            a.rot += a.rotSpeed * dt;
+
+            // bounce horizontally off walls slightly
+            if (a.x < a.r)     { a.x = a.r;     a.vx = Math.abs(a.vx); }
+            if (a.x > W - a.r) { a.x = W - a.r; a.vx = -Math.abs(a.vx); }
+
+            // passed bottom — dodged!
+            if (a.y > H + a.r) {
+                asteroids.splice(i, 1);
+                score++;
+                scoreEl.textContent = score;
+                playDodge();
+                popup('+1', ship.x, ship.y - ship.r - 8, '#9bff66');
+                // level up?
+                const newLvl = getLevelFor(score);
+                if (newLvl.num !== currentLevel.num) {
+                    currentLevel = newLvl;
+                    levelBanner = { text: newLvl.name, life: 2.2 };
+                    playLevelUp();
+                }
+                updateLevelUi();
+                continue;
+            }
+
+            // collision with ship
+            if (ship.invuln <= 0) {
+                const rr = a.r + ship.r;
+                if ((a.x - ship.x) * (a.x - ship.x) + (a.y - ship.y) * (a.y - ship.y) < rr * rr) {
+                    ship.lives--;
+                    livesEl.textContent = livesText();
+                    ship.invuln = 1.5;
+                    spawnExplosion(a.x, a.y);
+                    asteroids.splice(i, 1);
+                    playHit();
+                    popup('-1', ship.x, ship.y - ship.r - 8, '#ff5577');
+                    if (ship.lives <= 0) { gameOver(); return; }
+                }
+            }
+        }
+
+        // particles
+        particles = particles.filter(p => {
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt;
+            return p.life > 0;
+        });
+
+        // popups
+        popups = popups.filter(p => {
+            p.y += p.vy * dt;
+            p.life -= dt;
+            return p.life > 0;
+        });
+
+        // level banner
+        if (levelBanner) {
+            levelBanner.life -= dt;
+            if (levelBanner.life <= 0) levelBanner = null;
+        }
+    }
+
+    // ================== Render ==================
+    function drawStars() {
+        for (const s of stars) {
+            ctx.fillStyle = `rgba(255,255,255,${s.z * 0.9})`;
+            ctx.fillRect(s.x, s.y, s.size, s.size);
+        }
+    }
+
+    function drawAsteroid(a) {
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        ctx.rotate(a.rot);
+        // shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath(); ctx.arc(4, 4, a.r, 0, Math.PI*2); ctx.fill();
+        // body (irregular polygon)
+        ctx.fillStyle = '#8a7560';
+        ctx.strokeStyle = '#2e2316';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const verts = 8;
+        for (let i = 0; i < verts; i++) {
+            const ang = (i / verts) * Math.PI * 2;
+            const rad = a.r * (0.85 + (a.bumps[i] || 0));
+            const x = Math.cos(ang) * rad;
+            const y = Math.sin(ang) * rad;
+            if (i === 0) ctx.moveTo(x, y);
+            else         ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        // craters
+        ctx.fillStyle = '#5a4434';
+        ctx.beginPath(); ctx.arc(-a.r*0.3, -a.r*0.2, a.r*0.18, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(a.r*0.25, a.r*0.3, a.r*0.13, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
+    function drawShip() {
+        if (ship.invuln > 0 && Math.floor(performance.now() / 80) % 2 === 0) return;
+        ctx.save();
+        ctx.translate(ship.x, ship.y);
+
+        // wings (back layer)
+        ctx.fillStyle = '#ff5577';
+        ctx.strokeStyle = '#7a1f33';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-14, 14); ctx.lineTo(-22, 18); ctx.lineTo(-14, 4);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(14, 14); ctx.lineTo(22, 18); ctx.lineTo(14, 4);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // body (rocket triangle)
+        ctx.fillStyle = '#e8e8f0';
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, -22);
+        ctx.lineTo(14, 14);
+        ctx.lineTo(-14, 14);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        // cockpit window
+        ctx.fillStyle = '#5cc8ff';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(0, -3, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+        ctx.restore();
+    }
+
+    function drawParticles() {
+        for (const p of particles) {
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2));
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function drawPopups() {
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 18px Arial';
+        for (const p of popups) {
+            ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 0.8));
+            ctx.fillStyle = p.color;
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            ctx.lineWidth = 3;
+            ctx.strokeText(p.text, p.x, p.y);
+            ctx.fillText(p.text, p.x, p.y);
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function drawLevelBanner() {
+        if (!levelBanner) return;
+        const a = Math.min(1, levelBanner.life / 0.4);
+        ctx.globalAlpha = a;
+        ctx.font = 'bold 34px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const text = levelBanner.text;
+        const padX = 22, padY = 12;
+        const m = ctx.measureText(text);
+        const bw = m.width + padX * 2;
+        const bh = 34 + padY * 2;
+        const bx = W/2 - bw/2;
+        const by = H/2 - bh/2;
+        ctx.fillStyle = 'rgba(0,0,0,0.78)';
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+        else                  ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = currentLevel.color;
+        ctx.lineWidth = 4;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+        else                  ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = currentLevel.color;
+        ctx.shadowBlur = 18; ctx.shadowColor = currentLevel.color;
+        ctx.fillText(text, W/2, H/2);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+    }
+
+    function render() {
+        ctx.fillStyle = '#000010';
+        ctx.fillRect(0, 0, W, H);
+        drawStars();
+        drawParticles();
+        for (const a of asteroids) drawAsteroid(a);
+        drawShip();
+        drawPopups();
+        drawLevelBanner();
+    }
+
+    // ================== Loop ==================
+    function loop(t) {
+        if (!running) return;
+        const dt = Math.min((t - lastT) / 1000, 0.05);
+        lastT = t;
+        update(dt);
+        render();
+        if (running) rafId = requestAnimationFrame(loop);
+    }
+
+    // ================== Overlays ==================
+    function pickPlayer(name) {
+        const clean = (name || '').trim().slice(0, 20);
+        if (!clean) return;
+        currentPlayer = clean;
+        currentPlayerEl.textContent = currentPlayer;
+        start();
+    }
+
+    function showPlayerSelect() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        stopMusic();
+        currentPlayer = null;
+        currentPlayerEl.textContent = '—';
+        scoreEl.textContent = '0';
+        livesEl.textContent = '—';
+        levelEl.textContent = '—';
+        levelEl.style.color = '';
+
+        const recent = Object.entries(loadScores())
+            .map(([name, v]) => ({ name, lastPlayed: v.lastPlayed || 0 }))
+            .sort((a, b) => b.lastPlayed - a.lastPlayed)
+            .slice(0, 6);
+
+        const recentHtml = recent.length === 0 ? '' : `
+            <p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>
+            <div class="recent-grid">
+                ${recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('')}
+            </div>
+        `;
+
+        overlay.innerHTML = `
+            <h2>🚀 חלל - הימנע מהאסטרואידים</h2>
+            <p>מה השם שלך?</p>
+            <form class="name-form" id="name-form" autocomplete="off">
+                <input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />
+                <button type="submit" class="primary-btn">🚀 שגר חללית</button>
+            </form>
+            ${recentHtml}
+            ${leaderboardHtml()}
+        `;
+        overlay.style.display = 'flex';
+
+        const form  = document.getElementById('name-form');
+        const input = document.getElementById('name-input');
+        form.addEventListener('submit', e => { e.preventDefault(); pickPlayer(input.value); });
+        overlay.querySelectorAll('.player-btn').forEach(btn => {
+            btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+        });
+
+        // draw a background behind the overlay
+        spawnStars();
+        ctx.fillStyle = '#000010';
+        ctx.fillRect(0, 0, W, H);
+        drawStars();
+
+        if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+            setTimeout(() => input.focus(), 50);
+        }
+    }
+
+    function showGameOver() {
+        const scores = loadScores();
+        const myBest = scores[currentPlayer]?.best || 0;
+        const isNewRecord = score === myBest && score > 0;
+        const sorted = allPlayersSorted();
+        const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+        const lvlReached = getLevelFor(score);
+
+        let headline, msg;
+        if (isKing && isNewRecord) {
+            headline = '👑 מלך החלל!';
+            msg = `${currentPlayer} עלה לראש הטבלה עם ${score} אסטרואידים (הגיע ל${lvlReached.name})! 🌟`;
+        } else if (isNewRecord) {
+            headline = '🎉 שיא אישי חדש!';
+            msg = `${currentPlayer} שבר שיא עם ${score} אסטרואידים, הגיע ל${lvlReached.name}!`;
+        } else if (score >= 10) {
+            headline = '🏆 טיסה טובה!';
+            msg = `${currentPlayer} חמק מ-${score} אסטרואידים (${lvlReached.name}). השיא: ${myBest}`;
+        } else {
+            headline = '💥 התרסקת!';
+            msg = `${currentPlayer} חמק מ-${score} אסטרואידים (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+        }
+
+        overlay.innerHTML = `
+            <h2>${headline}</h2>
+            <p>${msg}</p>
+            ${leaderboardHtml(currentPlayer)}
+            <div class="end-buttons">
+                <button id="btn-again"  class="primary-btn">🔄 טוס שוב</button>
+                <button id="btn-change" class="secondary-btn">👥 שחקן אחר</button>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+
+        document.getElementById('btn-again').addEventListener('click', start);
+        document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+    }
+
+    function gameOver() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        stopMusic();
+        playGameOver();
+        saveResult(currentPlayer, score);
+        // Big final explosion
+        spawnExplosion(ship.x, ship.y);
+        spawnExplosion(ship.x, ship.y);
+        // Quick fade frame then show overlay
+        setTimeout(showGameOver, 700);
+    }
+
+    function start() {
+        if (!currentPlayer) { showPlayerSelect(); return; }
+        overlay.style.display = 'none';
+        ensureAudio();
+        playStart();
+        resetGame();
+        running = true;
+        lastT = performance.now();
+        rafId = requestAnimationFrame(loop);
+        setTimeout(startMusic, 450);
+    }
+
+    // ================== Mute ==================
+    const muteBtn = document.getElementById('mute');
+    muteBtn.addEventListener('click', () => {
+        muted = !muted;
+        muteBtn.textContent = muted ? '🔇' : '🔊';
+    });
+
+    // ================== Auto-fit to screen ==================
+    function resizeGame() {
+        const wrap = document.getElementById('game-wrap');
+        wrap.style.width = '0px';
+        wrap.style.height = '0px';
+        void document.body.offsetHeight;
+
+        let chromeH = 0;
+        for (const c of document.body.children) {
+            if (c === wrap) continue;
+            const cs = getComputedStyle(c);
+            if (cs.position === 'fixed' || cs.display === 'none') continue;
+            chromeH += c.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom);
+        }
+        const bodyCs = getComputedStyle(document.body);
+        chromeH += parseFloat(bodyCs.paddingTop) + parseFloat(bodyCs.paddingBottom);
+
+        const availH = window.innerHeight - chromeH - 8;
+        const availW = window.innerWidth - 16;
+        const size = Math.max(180, Math.min(availW, availH));
+        wrap.style.width  = size + 'px';
+        wrap.style.height = size + 'px';
+    }
+    window.addEventListener('resize', resizeGame);
+    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 120));
+    resizeGame();
+
+    // ================== Boot ==================
+    spawnStars();
+    ctx.fillStyle = '#000010';
+    ctx.fillRect(0, 0, W, H);
+    drawStars();
+    showPlayerSelect();
+</script>
+</body>
+</html>

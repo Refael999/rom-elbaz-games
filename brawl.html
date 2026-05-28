@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>בראול ארנה 🎯</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2e1a3e, #16213e, #0f3460);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+            padding: 8px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3vw, 1.7em);
+            margin-bottom: 6px;
+            color: #ffdd57;
+            text-shadow: 0 0 18px #ffdd57;
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .status-pill {
+            font-size: clamp(0.8em, 2vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #ffdd57;
+            border-radius: 25px;
+        }
+
+        #score   { color: #ffdd57; font-weight: bold; }
+        #current-player { color: #00ff88; font-weight: bold; }
+        #brawler-name   { color: #ff5577; font-weight: bold; }
+        #health  { color: #ff5577; font-weight: bold; }
+
+        #game-wrap {
+            position: relative;
+            /* width / height set by resizeGame() below to the largest square that fits */
+            width: 300px;
+            height: 300px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #ffdd57;
+            border-radius: 12px;
+            box-shadow: 0 0 35px rgba(255,221,87,0.3);
+            display: block;
+            touch-action: none;
+            background: #3a6e2a;
+            cursor: crosshair;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(10,10,26,0.96);
+            border-radius: 10px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        #overlay h2 {
+            font-size: clamp(1.1em, 3.8vw, 1.9em);
+            color: #ffdd57;
+            text-shadow: 0 0 18px #ffdd57;
+            margin-bottom: 4px;
+        }
+        #overlay p {
+            font-size: clamp(0.8em, 2.1vw, 1.05em);
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .name-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 10px;
+        }
+        .name-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: clamp(1em, 2.5vw, 1.15em);
+            font-family: Arial, sans-serif;
+            border: 2px solid #00ff88;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            outline: none;
+        }
+        .name-input::placeholder { color: rgba(255,255,255,0.4); }
+        .name-input:focus { background: rgba(255,255,255,0.18); border-color: #ffdd57; }
+
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 6px;
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 8px;
+        }
+        .player-btn {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.9em, 2.3vw, 1.05em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,255,136,0.3);
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .player-btn:hover, .player-btn:active { transform: scale(1.08); }
+
+        .brawler-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 100%;
+            max-width: 380px;
+            margin-bottom: 8px;
+        }
+        .brawler-btn {
+            background: rgba(255,255,255,0.08);
+            border: 2px solid;
+            color: white;
+            padding: 10px 4px;
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .brawler-btn:hover, .brawler-btn:active { transform: scale(1.05); }
+        .brawler-btn .emoji { font-size: 1.6em; }
+        .brawler-btn .desc { font-size: 0.75em; color: #aaa; font-weight: normal; }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #ffdd57, #ffb700);
+            color: #1a1a2e;
+            border: none;
+            padding: clamp(8px, 1.8vw, 12px) clamp(20px, 4vw, 28px);
+            font-size: clamp(0.95em, 2.4vw, 1.15em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255,221,87,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: clamp(8px, 1.8vw, 12px) clamp(20px, 4vw, 28px);
+            font-size: clamp(0.9em, 2.2vw, 1.05em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,221,87,0.4);
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin: 6px 0 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .leaderboard-title { color: #ffdd57; font-size: clamp(0.85em, 2.1vw, 1em); margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: clamp(0.8em, 2vw, 0.95em); }
+        .leaderboard td { padding: 3px 5px; color: #ddd; }
+        .leaderboard tr.highlight td { background: rgba(255,221,87,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #ffdd57; font-weight: bold; width: 50px; }
+        .leaderboard .zero td:last-child { color: #555; }
+
+        #mute {
+            position: fixed;
+            top: 12px; left: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,221,87,0.4);
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: rgba(255,221,87,0.3); }
+
+        #hint {
+            margin-top: 6px;
+            color: rgba(255,255,255,0.55);
+            font-size: clamp(0.75em, 1.9vw, 0.9em);
+            text-align: center;
+            padding: 0 10px;
+            max-width: 100%;
+        }
+        @media (pointer: coarse), (max-width: 768px) {
+            #hint-desktop { display: none; }
+            canvas { cursor: default; }
+        }
+        @media (pointer: fine) and (min-width: 769px) {
+            #hint-mobile { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק / הפעל סאונד">🔊</button>
+
+<h1>🎯 בראול ארנה 🎯</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">⚔️ <span id="brawler-name">—</span></div>
+    <div class="status-pill">❤️ <span id="health">—</span></div>
+    <div class="status-pill">⚡ <span id="score">0</span></div>
+    <div class="status-pill">🎯 שלב: <span id="level">1</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<p id="hint">
+    <span id="hint-desktop">🎯 העכבר מכוון · 🖱️ לחץ או החזק כדי לירות · WASD/חצים לתזוזה</span>
+    <span id="hint-mobile">👈 ג'ויסטיק שמאל = תזוזה · 👉 ג'ויסטיק ימין = כיוון וירי</span>
+</p>
+
+<script>
+    // ================== Setup ==================
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    const overlay = document.getElementById('overlay');
+    const scoreEl  = document.getElementById('score');
+    const healthEl = document.getElementById('health');
+    const levelEl  = document.getElementById('level');
+    const currentPlayerEl = document.getElementById('current-player');
+    const brawlerNameEl   = document.getElementById('brawler-name');
+
+    const W = canvas.width;
+    const H = canvas.height;
+
+    // ================== Brawlers ==================
+    // Each brawler has: name, emoji, color, hp, speed, attack pattern
+    // pattern types: 'single', 'spread', 'sniper'
+    const BRAWLERS = {
+        colt: {
+            name:    'קולט',
+            emoji:   '🔫',
+            desc:    'מקלע מהיר',
+            color:   '#4ec5ff',
+            outline: '#1a6da3',
+            hp:      6,
+            speed:   210,
+            fireMs:  180,       // ms between shots
+            pattern: 'single',
+            bulletSpeed: 560,
+            bulletDmg:   1,
+            bulletR:     5,
+            bulletColor: '#4ec5ff',
+        },
+        shelly: {
+            name:    'שלי',
+            emoji:   '💥',
+            desc:    'פיזור 3 כדורים',
+            color:   '#ff9a3c',
+            outline: '#a85515',
+            hp:      8,
+            speed:   190,
+            fireMs:  600,
+            pattern: 'spread',
+            bulletSpeed: 480,
+            bulletDmg:   1,
+            bulletR:     6,
+            bulletColor: '#ffce5e',
+        },
+        bo: {
+            name:    'בו',
+            emoji:   '🎯',
+            desc:    'יריית צלף חזקה',
+            color:   '#9bff66',
+            outline: '#3d8021',
+            hp:      7,
+            speed:   195,
+            fireMs:  850,
+            pattern: 'sniper',
+            bulletSpeed: 700,
+            bulletDmg:   3,
+            bulletR:     9,
+            bulletColor: '#caff8a',
+        },
+    };
+
+    // ================== Levels ==================
+    // Difficulty stages — when score reaches minKills, you advance to that level.
+    const LEVELS = [
+        { num: 1, name: 'שלב 1 · קל',           minKills: 0,  enemySpeed:  55, spawnMs: 1900, enemyHp: 1, maxEnemies: 3, color: '#9bff66' },
+        { num: 2, name: 'שלב 2 · קל-בינוני',     minKills: 5,  enemySpeed:  75, spawnMs: 1500, enemyHp: 1, maxEnemies: 4, color: '#cffd5e' },
+        { num: 3, name: 'שלב 3 · בינוני',        minKills: 10, enemySpeed:  95, spawnMs: 1200, enemyHp: 2, maxEnemies: 5, color: '#ffdd57' },
+        { num: 4, name: 'שלב 4 · די קשה',        minKills: 20, enemySpeed: 115, spawnMs: 950,  enemyHp: 2, maxEnemies: 6, color: '#ffb347' },
+        { num: 5, name: 'שלב 5 · קשה',          minKills: 35, enemySpeed: 140, spawnMs: 780,  enemyHp: 3, maxEnemies: 7, color: '#ff7733' },
+        { num: 6, name: 'שלב 6 · קשה מאוד',     minKills: 45, enemySpeed: 170, spawnMs: 620,  enemyHp: 3, maxEnemies: 8, color: '#ff3366' },
+        { num: 7, name: 'שלב 7 · בטירוף! 🔥',    minKills: 70, enemySpeed: 210, spawnMs: 480,  enemyHp: 4, maxEnemies:10, color: '#c92a52' },
+    ];
+    function getLevelFor(score) {
+        for (let i = LEVELS.length - 1; i >= 0; i--) {
+            if (score >= LEVELS[i].minKills) return LEVELS[i];
+        }
+        return LEVELS[0];
+    }
+    function nextLevelGoal(level) {
+        const next = LEVELS.find(l => l.num === level.num + 1);
+        return next ? next.minKills : null;
+    }
+
+    const STORAGE_KEY = 'rom_brawl_scores_v2';
+    let currentPlayer = null;
+    let currentBrawlerKey = null;
+
+    function loadScores() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch { return {}; }
+    }
+    function saveResult(player, finalScore) {
+        const scores = loadScores();
+        const e = scores[player] || { best: 0, games: 0, last: 0 };
+        if (finalScore > e.best) e.best = finalScore;
+        e.games = (e.games || 0) + 1;
+        e.last  = finalScore;
+        e.lastPlayed = Date.now();
+        scores[player] = e;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+    }
+    function allPlayersSorted() {
+        const scores = loadScores();
+        return Object.entries(scores)
+            .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+            .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+    }
+    function leaderboardHtml(highlight = null) {
+        const entries = allPlayersSorted().slice(0, 10);   // top 10
+        if (entries.length === 0) {
+            return `
+                <div class="leaderboard">
+                    <div class="leaderboard-title">🏆 טבלת השיאים</div>
+                    <p style="color:#888;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! 🎯</p>
+                </div>
+            `;
+        }
+        const medals = ['🥇', '🥈', '🥉'];
+        const rows = entries.map((e, i) => {
+            const rank = i < 3 ? medals[i] : `${i + 1}.`;
+            const cls  = e.name === highlight ? 'highlight' : '';
+            const clsAttr = cls ? ` class="${cls}"` : '';
+            return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+        }).join('');
+        return `
+            <div class="leaderboard">
+                <div class="leaderboard-title">🏆 טבלת השיאים — הטופ ${entries.length}</div>
+                <table>${rows}</table>
+            </div>
+        `;
+    }
+
+    // ================== Map / Walls ==================
+    // Designed for 700×700 canvas. Player spawns at (350, 350) — keep that area clear!
+    const WALLS = [
+        // Corner L-shapes
+        { x: 100, y: 100, w: 80, h: 25 },
+        { x: 100, y: 100, w: 25, h: 80 },
+        { x: 520, y: 100, w: 80, h: 25 },
+        { x: 575, y: 100, w: 25, h: 80 },
+        { x: 100, y: 575, w: 80, h: 25 },
+        { x: 100, y: 520, w: 25, h: 80 },
+        { x: 520, y: 575, w: 80, h: 25 },
+        { x: 575, y: 520, w: 25, h: 80 },
+
+        // Inner cover blocks (leaving center clear for spawn)
+        { x: 220, y: 250, w: 80, h: 30 },
+        { x: 400, y: 250, w: 80, h: 30 },
+        { x: 220, y: 420, w: 80, h: 30 },
+        { x: 400, y: 420, w: 80, h: 30 },
+
+        // Small pillars above/below center
+        { x: 335, y: 170, w: 30, h: 30 },
+        { x: 335, y: 500, w: 30, h: 30 },
+    ];
+
+    function circleHitsWall(x, y, r) {
+        for (const w of WALLS) {
+            const cx = Math.max(w.x, Math.min(x, w.x + w.w));
+            const cy = Math.max(w.y, Math.min(y, w.y + w.h));
+            const dx = x - cx, dy = y - cy;
+            if (dx*dx + dy*dy < r*r) return w;
+        }
+        return null;
+    }
+
+    // ================== Game state ==================
+    let running = false;
+    let rafId = null;
+    let player, enemies, bullets, popups;
+    let score, elapsed, lastShot, lastSpawn, lastT;
+    let currentLevel, levelBanner;   // levelBanner = { text, life } or null
+
+    function resetGame() {
+        const b = BRAWLERS[currentBrawlerKey];
+        player = {
+            x: W/2, y: H/2,
+            r: 22,
+            speed: b.speed,
+            hp: b.hp,
+            maxHp: b.hp,
+            invuln: 0,
+            aim: { x: 1, y: 0 },     // last aim direction
+        };
+        enemies = [];
+        bullets = [];
+        popups = [];
+        score = 0;
+        elapsed = 0;
+        lastShot = 0;
+        lastSpawn = 0;
+        currentLevel = LEVELS[0];
+        levelBanner  = { text: currentLevel.name, life: 2.0 };
+        scoreEl.textContent  = '0';
+        healthEl.textContent = `${player.hp}/${player.maxHp}`;
+        brawlerNameEl.textContent = b.name;
+        updateLevelUi();
+    }
+
+    function updateLevelUi() {
+        const goal = nextLevelGoal(currentLevel);
+        levelEl.textContent = goal !== null
+            ? `${currentLevel.num} (${score}/${goal})`
+            : `${currentLevel.num} 🔥`;
+        levelEl.style.color = currentLevel.color;
+    }
+
+    // ================== Input ==================
+    const keys = { up: false, down: false, left: false, right: false };
+
+    document.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        if (k === 'arrowup'    || k === 'w') keys.up    = true;
+        if (k === 'arrowdown'  || k === 's') keys.down  = true;
+        if (k === 'arrowleft'  || k === 'a') keys.left  = true;
+        if (k === 'arrowright' || k === 'd') keys.right = true;
+        if (k.startsWith('arrow')) e.preventDefault();
+    });
+    document.addEventListener('keyup', e => {
+        const k = e.key.toLowerCase();
+        if (k === 'arrowup'    || k === 'w') keys.up    = false;
+        if (k === 'arrowdown'  || k === 's') keys.down  = false;
+        if (k === 'arrowleft'  || k === 'a') keys.left  = false;
+        if (k === 'arrowright' || k === 'd') keys.right = false;
+    });
+
+    // Mouse aim + click to fire
+    let mouseAim = null;        // {x, y} in canvas coords
+    let mouseFire = false;
+
+    function setMouseFromEvent(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        const scaleY = H / rect.height;
+        mouseAim = {
+            x: (e.clientX - rect.left) * scaleX,
+            y: (e.clientY - rect.top)  * scaleY,
+        };
+    }
+    canvas.addEventListener('mousemove', setMouseFromEvent);
+    canvas.addEventListener('mousedown', e => { setMouseFromEvent(e); mouseFire = true; });
+    canvas.addEventListener('mouseup',   () => { mouseFire = false; });
+    canvas.addEventListener('mouseleave',() => { mouseFire = false; });
+
+    // Dual virtual joysticks on touch
+    // Left half of canvas → movement
+    // Right half of canvas → aim+fire (continuous while held)
+    let moveTouchId = null;
+    let moveStart = null;
+    let moveVec   = { x: 0, y: 0 };
+
+    let aimTouchId = null;
+    let aimStart   = null;
+    let aimVec     = { x: 0, y: 0 };
+    let touchFire  = false;
+
+    const JOY_R = 70;
+
+    function canvasCoords(touch) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        const scaleY = H / rect.height;
+        return {
+            x: (touch.clientX - rect.left) * scaleX,
+            y: (touch.clientY - rect.top)  * scaleY,
+        };
+    }
+
+    canvas.addEventListener('touchstart', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            const p = canvasCoords(t);
+            const onRight = p.x > W / 2;
+            if (onRight && aimTouchId === null) {
+                aimTouchId = t.identifier;
+                aimStart = { x: t.clientX, y: t.clientY };
+                aimVec = { x: 0, y: 0 };
+                touchFire = true;
+            } else if (!onRight && moveTouchId === null) {
+                moveTouchId = t.identifier;
+                moveStart = { x: t.clientX, y: t.clientY };
+                moveVec = { x: 0, y: 0 };
+            }
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            if (t.identifier === moveTouchId && moveStart) {
+                const dx = t.clientX - moveStart.x;
+                const dy = t.clientY - moveStart.y;
+                const d = Math.hypot(dx, dy);
+                if (d > JOY_R)     moveVec = { x: dx/d, y: dy/d };
+                else if (d > 0)    moveVec = { x: dx/JOY_R, y: dy/JOY_R };
+                else               moveVec = { x: 0, y: 0 };
+            } else if (t.identifier === aimTouchId && aimStart) {
+                const dx = t.clientX - aimStart.x;
+                const dy = t.clientY - aimStart.y;
+                const d = Math.hypot(dx, dy);
+                if (d > 4) {
+                    aimVec = { x: dx/d, y: dy/d };  // unit aim direction
+                }
+            }
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        for (const t of e.changedTouches) {
+            if (t.identifier === moveTouchId) {
+                moveTouchId = null;
+                moveStart = null;
+                moveVec = { x: 0, y: 0 };
+            } else if (t.identifier === aimTouchId) {
+                aimTouchId = null;
+                aimStart = null;
+                aimVec = { x: 0, y: 0 };
+                touchFire = false;
+            }
+        }
+    }, { passive: false });
+
+    function getMoveVec() {
+        if (moveTouchId !== null) return moveVec;
+        let dx = 0, dy = 0;
+        if (keys.up)    dy -= 1;
+        if (keys.down)  dy += 1;
+        if (keys.left)  dx -= 1;
+        if (keys.right) dx += 1;
+        if (dx !== 0 && dy !== 0) {
+            const len = Math.hypot(dx, dy);
+            dx /= len; dy /= len;
+        }
+        return { x: dx, y: dy };
+    }
+
+    function getAimAndFire() {
+        // Touch aim
+        if (aimTouchId !== null) {
+            const len = Math.hypot(aimVec.x, aimVec.y);
+            if (len > 0.05) {
+                return { aim: { x: aimVec.x, y: aimVec.y }, fire: touchFire };
+            }
+            return { aim: null, fire: false };
+        }
+        // Mouse aim
+        if (mouseAim) {
+            const dx = mouseAim.x - player.x;
+            const dy = mouseAim.y - player.y;
+            const len = Math.hypot(dx, dy);
+            if (len > 1) {
+                return { aim: { x: dx/len, y: dy/len }, fire: mouseFire };
+            }
+        }
+        return { aim: null, fire: false };
+    }
+
+    // ================== Sound ==================
+    let audioCtx = null;
+    let muted = false;
+
+    function ensureAudio() {
+        if (!audioCtx) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) audioCtx = new Ctx();
+        }
+        return audioCtx;
+    }
+    function tone(freq, duration, type='square', vol=0.1, delay=0) {
+        if (muted) return;
+        const ctx = ensureAudio();
+        if (!ctx) return;
+        const t0 = ctx.currentTime + delay;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol, t0);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t0); osc.stop(t0 + duration);
+    }
+    function playShoot()    { tone(900, 0.05, 'square',  0.05, 0); }
+    function playSniper()   { tone(420, 0.18, 'sawtooth',0.12, 0); }
+    function playSpread()   { tone(550, 0.08, 'square',  0.08, 0); tone(680, 0.08, 'square', 0.08, 0.03); }
+    function playKill()     { tone(440, 0.08, 'square', 0.13, 0); tone(660, 0.10, 'square', 0.13, 0.06); }
+    function playHit()      { tone(180, 0.20, 'sawtooth', 0.18, 0); }
+    function playStart()    {
+        tone(523, 0.10, 'triangle', 0.18, 0);
+        tone(659, 0.10, 'triangle', 0.18, 0.10);
+        tone(784, 0.16, 'triangle', 0.18, 0.20);
+    }
+    function playGameOver() {
+        tone(392, 0.18, 'sawtooth', 0.16, 0);
+        tone(294, 0.18, 'sawtooth', 0.16, 0.18);
+        tone(196, 0.35, 'sawtooth', 0.16, 0.36);
+    }
+    function playLevelUp() {
+        tone(523,  0.10, 'square', 0.16, 0);
+        tone(659,  0.10, 'square', 0.16, 0.10);
+        tone(784,  0.10, 'square', 0.16, 0.20);
+        tone(1047, 0.22, 'square', 0.18, 0.30);
+    }
+
+    const MUSIC_NOTES = [392,523,587,523, 392,523,587,659, 587,523,440,392, 440,523,587,523];
+    const BASS_NOTES  = [ 98, 98, 98, 98,  98, 98, 98, 98, 131,131,131,131, 110,110,110,110];
+    const NOTE_MS = 220;
+    let musicTimer = null, musicStep = 0;
+    function playMusicTick() {
+        if (muted) { musicStep++; return; }
+        const i = musicStep % MUSIC_NOTES.length;
+        tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'triangle', 0.05, 0);
+        if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.05, 0);
+        musicStep++;
+    }
+    function startMusic() {
+        stopMusic(); musicStep = 0;
+        playMusicTick();
+        musicTimer = setInterval(playMusicTick, NOTE_MS);
+    }
+    function stopMusic() {
+        if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+    }
+
+    // ================== Game logic ==================
+    function spawnEnemy() {
+        // Respect the level's max simultaneous enemies cap
+        if (enemies.length >= currentLevel.maxEnemies) return;
+        // Find an open spawn position
+        for (let tries = 0; tries < 20; tries++) {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            if (side === 0) { x = Math.random() * W; y = 30; }
+            if (side === 1) { x = W - 30; y = Math.random() * H; }
+            if (side === 2) { x = Math.random() * W; y = H - 30; }
+            if (side === 3) { x = 30; y = Math.random() * H; }
+            if (!circleHitsWall(x, y, 24)) {
+                enemies.push({
+                    x, y, r: 22,
+                    speed: currentLevel.enemySpeed,
+                    hp:    currentLevel.enemyHp,
+                    maxHp: currentLevel.enemyHp,
+                    color: '#c92a52',
+                    outline: '#651026',
+                });
+                return;
+            }
+        }
+    }
+
+    function shootSingle(b, aim) {
+        bullets.push({
+            x: player.x, y: player.y,
+            vx: aim.x * b.bulletSpeed,
+            vy: aim.y * b.bulletSpeed,
+            r: b.bulletR,
+            color: b.bulletColor,
+            dmg: b.bulletDmg,
+            life: 1.4,
+        });
+    }
+    function shootSpread(b, aim) {
+        const angle = Math.atan2(aim.y, aim.x);
+        const spread = 0.35;  // radians half-spread
+        for (let i = -1; i <= 1; i++) {
+            const a = angle + i * spread;
+            bullets.push({
+                x: player.x, y: player.y,
+                vx: Math.cos(a) * b.bulletSpeed,
+                vy: Math.sin(a) * b.bulletSpeed,
+                r: b.bulletR,
+                color: b.bulletColor,
+                dmg: b.bulletDmg,
+                life: 0.8,
+            });
+        }
+    }
+    function shootSniper(b, aim) {
+        bullets.push({
+            x: player.x, y: player.y,
+            vx: aim.x * b.bulletSpeed,
+            vy: aim.y * b.bulletSpeed,
+            r: b.bulletR,
+            color: b.bulletColor,
+            dmg: b.bulletDmg,
+            life: 1.8,
+            pierce: true,
+        });
+    }
+
+    function fire(aim) {
+        const b = BRAWLERS[currentBrawlerKey];
+        if (b.pattern === 'single') { shootSingle(b, aim); playShoot(); }
+        if (b.pattern === 'spread') { shootSpread(b, aim); playSpread(); }
+        if (b.pattern === 'sniper') { shootSniper(b, aim); playSniper(); }
+    }
+
+    function popup(text, x, y, color = '#ffdd57') {
+        popups.push({ text, x, y, vy: -40, life: 0.8, color });
+    }
+
+    function update(dt) {
+        elapsed += dt;
+
+        // ----- Player movement with wall collision -----
+        const m = getMoveVec();
+        const dxm = m.x * player.speed * dt;
+        const dym = m.y * player.speed * dt;
+
+        // Try X then Y so we slide along walls
+        let nx = player.x + dxm;
+        if (!circleHitsWall(nx, player.y, player.r) &&
+            nx > player.r && nx < W - player.r) {
+            player.x = nx;
+        }
+        let ny = player.y + dym;
+        if (!circleHitsWall(player.x, ny, player.r) &&
+            ny > player.r && ny < H - player.r) {
+            player.y = ny;
+        }
+        player.invuln = Math.max(0, player.invuln - dt);
+
+        // ----- Aim & firing -----
+        const { aim, fire: shouldFire } = getAimAndFire();
+        if (aim) player.aim = aim;
+
+        const b = BRAWLERS[currentBrawlerKey];
+        if (shouldFire && aim && performance.now() - lastShot > b.fireMs) {
+            fire(aim);
+            lastShot = performance.now();
+        }
+
+        // ----- Spawn enemies (rate set by current level) -----
+        if (performance.now() - lastSpawn > currentLevel.spawnMs) {
+            spawnEnemy();
+            lastSpawn = performance.now();
+        }
+
+        // ----- Move enemies -----
+        for (const e of enemies) {
+            const dx = player.x - e.x;
+            const dy = player.y - e.y;
+            const len = Math.hypot(dx, dy);
+            if (len < 0.5) continue;
+            const mx = dx / len * e.speed * dt;
+            const my = dy / len * e.speed * dt;
+            // Slide along walls
+            let ex2 = e.x + mx;
+            if (!circleHitsWall(ex2, e.y, e.r)) e.x = ex2;
+            let ey2 = e.y + my;
+            if (!circleHitsWall(e.x, ey2, e.r)) e.y = ey2;
+        }
+
+        // ----- Bullets -----
+        bullets = bullets.filter(b => {
+            b.x += b.vx * dt;
+            b.y += b.vy * dt;
+            b.life -= dt;
+            if (b.life <= 0) return false;
+            if (b.x < -20 || b.x > W+20 || b.y < -20 || b.y > H+20) return false;
+            // Wall blocks (unless piercing — sniper still blocked by walls)
+            if (circleHitsWall(b.x, b.y, b.r)) return false;
+            return true;
+        });
+
+        // ----- Bullets vs enemies -----
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            for (let j = bullets.length - 1; j >= 0; j--) {
+                const bu = bullets[j];
+                const rr = (e.r + bu.r);
+                if ((e.x-bu.x)*(e.x-bu.x) + (e.y-bu.y)*(e.y-bu.y) < rr*rr) {
+                    e.hp -= bu.dmg;
+                    popup(`-${bu.dmg}`, e.x, e.y - e.r - 6, '#ffeb6b');
+                    if (!bu.pierce) bullets.splice(j, 1);
+                    if (e.hp <= 0) {
+                        enemies.splice(i, 1);
+                        score++;
+                        scoreEl.textContent = score;
+                        popup('+1', e.x, e.y, '#9bff66');
+                        playKill();
+                        // Level-up check
+                        const newLvl = getLevelFor(score);
+                        if (newLvl.num !== currentLevel.num) {
+                            currentLevel = newLvl;
+                            levelBanner = { text: newLvl.name, life: 2.2 };
+                            playLevelUp();
+                        }
+                        updateLevelUi();
+                    }
+                    break;
+                }
+            }
+        }
+
+        // ----- Enemies vs player -----
+        if (player.invuln <= 0) {
+            for (const e of enemies) {
+                const rr = (e.r + player.r);
+                if ((e.x-player.x)*(e.x-player.x) + (e.y-player.y)*(e.y-player.y) < rr*rr) {
+                    player.hp--;
+                    healthEl.textContent = `${player.hp}/${player.maxHp}`;
+                    player.invuln = 0.9;
+                    popup('-1', player.x, player.y - player.r - 6, '#ff5577');
+                    playHit();
+                    if (player.hp <= 0) { gameOver(); return; }
+                    break;
+                }
+            }
+        }
+
+        // ----- Popups -----
+        popups = popups.filter(p => {
+            p.y += p.vy * dt;
+            p.life -= dt;
+            return p.life > 0;
+        });
+
+        // ----- Level banner timer -----
+        if (levelBanner) {
+            levelBanner.life -= dt;
+            if (levelBanner.life <= 0) levelBanner = null;
+        }
+    }
+
+    // ================== Rendering ==================
+    function drawFloor() {
+        // green tile pattern (Brawl-Stars-like grass)
+        const tile = 50;
+        for (let x = 0; x < W; x += tile) {
+            for (let y = 0; y < H; y += tile) {
+                const dark = ((x/tile + y/tile) % 2) === 0;
+                ctx.fillStyle = dark ? '#3a6e2a' : '#356326';
+                ctx.fillRect(x, y, tile, tile);
+            }
+        }
+    }
+    function drawWalls() {
+        for (const w of WALLS) {
+            // Shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(w.x + 4, w.y + 4, w.w, w.h);
+            // Block
+            ctx.fillStyle = '#7d6248';
+            ctx.fillRect(w.x, w.y, w.w, w.h);
+            // Top highlight
+            ctx.fillStyle = '#9f8060';
+            ctx.fillRect(w.x, w.y, w.w, 5);
+            // Outline
+            ctx.strokeStyle = '#3a2a1c';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(w.x, w.y, w.w, w.h);
+        }
+    }
+
+    function drawHealthBar(x, y, hp, maxHp, w = 40) {
+        const h = 6;
+        const ratio = Math.max(0, hp / maxHp);
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(x - w/2 - 1, y - 1, w + 2, h + 2);
+        ctx.fillStyle = ratio > 0.5 ? '#5ddd5d' : ratio > 0.25 ? '#ffce5e' : '#ff5577';
+        ctx.fillRect(x - w/2, y, w * ratio, h);
+    }
+
+    function drawCharacter(x, y, r, color, outline, aim, isPlayer) {
+        // shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.ellipse(x, y + r + 3, r * 0.9, r * 0.35, 0, 0, Math.PI*2); ctx.fill();
+
+        // body (rounded rect)
+        const bodyW = r * 1.6, bodyH = r * 1.4;
+        ctx.fillStyle = color;
+        ctx.strokeStyle = outline;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(x - bodyW/2, y - bodyH/2 + 6, bodyW, bodyH, 8);
+        else ctx.rect(x - bodyW/2, y - bodyH/2 + 6, bodyW, bodyH);
+        ctx.fill(); ctx.stroke();
+
+        // head
+        ctx.beginPath(); ctx.arc(x, y - r * 0.45, r * 0.75, 0, Math.PI*2);
+        ctx.fill(); ctx.stroke();
+
+        // eyes
+        ctx.fillStyle = 'white';
+        ctx.beginPath(); ctx.arc(x - 5, y - r * 0.5, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 5, y - r * 0.5, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = isPlayer ? '#001a0a' : '#220011';
+        ctx.beginPath(); ctx.arc(x - 5, y - r * 0.5, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 5, y - r * 0.5, 2, 0, Math.PI*2); ctx.fill();
+
+        // mouth: smile for player, frown for enemy
+        ctx.strokeStyle = isPlayer ? '#001a0a' : '#220011';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        if (isPlayer) ctx.arc(x, y - r * 0.25, 5, 0, Math.PI);
+        else          ctx.arc(x, y - r * 0.10, 5, Math.PI, 2*Math.PI);
+        ctx.stroke();
+
+        // weapon (only for player) - points toward aim
+        if (isPlayer && aim) {
+            const a = Math.atan2(aim.y, aim.x);
+            const handX = x + Math.cos(a) * (r * 0.8);
+            const handY = y + Math.sin(a) * (r * 0.8) + 2;
+            const tipX  = x + Math.cos(a) * (r * 1.7);
+            const tipY  = y + Math.sin(a) * (r * 1.7) + 2;
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(handX, handY);
+            ctx.lineTo(tipX,  tipY);
+            ctx.stroke();
+            // muzzle dot
+            ctx.fillStyle = '#ffdd57';
+            ctx.beginPath(); ctx.arc(tipX, tipY, 3, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    function drawPlayer() {
+        const blink = player.invuln > 0 && Math.floor(performance.now() / 80) % 2 === 0;
+        if (blink) return;
+        const b = BRAWLERS[currentBrawlerKey];
+        drawCharacter(player.x, player.y, player.r, b.color, b.outline, player.aim, true);
+        drawHealthBar(player.x, player.y - player.r - 14, player.hp, player.maxHp, 50);
+    }
+    function drawEnemies() {
+        for (const e of enemies) {
+            drawCharacter(e.x, e.y, e.r, e.color, e.outline, null, false);
+            // Show enemy health bar only when damaged
+            if (e.maxHp > 1 && e.hp < e.maxHp) {
+                drawHealthBar(e.x, e.y - e.r - 12, e.hp, e.maxHp, 36);
+            }
+        }
+    }
+    function drawBullets() {
+        for (const b of bullets) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = b.color;
+            ctx.fillStyle = b.color;
+            ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+    }
+    function drawPopups() {
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 16px Arial';
+        for (const p of popups) {
+            const alpha = Math.max(0, Math.min(1, p.life / 0.8));
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+            ctx.lineWidth = 3;
+            ctx.strokeText(p.text, p.x, p.y);
+            ctx.fillText(p.text, p.x, p.y);
+        }
+        ctx.globalAlpha = 1;
+    }
+    function drawJoysticks() {
+        function drawJoy(start, vec, color) {
+            if (!start) return;
+            const rect = canvas.getBoundingClientRect();
+            const scale = W / rect.width;
+            const sx = (start.x - rect.left) * scale;
+            const sy = (start.y - rect.top) * scale;
+            const r  = JOY_R * scale;
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI*2); ctx.stroke();
+            const kx = sx + vec.x * r;
+            const ky = sy + vec.y * r;
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(kx, ky, r * 0.4, 0, Math.PI*2); ctx.fill();
+        }
+        drawJoy(moveStart, moveVec, 'rgba(0,255,136,0.7)');
+        drawJoy(aimStart,  aimVec,  'rgba(255,85,119,0.7)');
+    }
+    function drawLevelBanner() {
+        if (!levelBanner) return;
+        const a = Math.min(1, levelBanner.life / 0.4);  // fade out in last 0.4s
+        ctx.globalAlpha = a;
+        // pill background
+        ctx.font = 'bold 36px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const text = levelBanner.text;
+        const padX = 24, padY = 14;
+        const m = ctx.measureText(text);
+        const bw = m.width + padX * 2;
+        const bh = 36 + padY * 2;
+        const bx = W/2 - bw/2;
+        const by = H/2 - bh/2;
+        ctx.fillStyle = 'rgba(10,10,26,0.85)';
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+        else                  ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = currentLevel.color;
+        ctx.lineWidth = 4;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+        else                  ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = currentLevel.color;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = currentLevel.color;
+        ctx.fillText(text, W/2, H/2);
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+    }
+
+    function render() {
+        drawFloor();
+        drawWalls();
+        drawBullets();
+        drawEnemies();
+        drawPlayer();
+        drawPopups();
+        drawLevelBanner();
+        drawJoysticks();
+    }
+
+    // ================== Loop ==================
+    function loop(t) {
+        if (!running) return;
+        const dt = Math.min((t - lastT) / 1000, 0.05);
+        lastT = t;
+        update(dt);
+        render();
+        if (running) rafId = requestAnimationFrame(loop);
+    }
+
+    // ================== Overlays ==================
+    function pickPlayer(name) {
+        const clean = (name || '').trim().slice(0, 20);
+        if (!clean) return;
+        currentPlayer = clean;
+        currentPlayerEl.textContent = currentPlayer;
+        showBrawlerSelect();
+    }
+
+    function showPlayerSelect() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        stopMusic();
+        currentPlayer = null;
+        currentBrawlerKey = null;
+        currentPlayerEl.textContent = '—';
+        brawlerNameEl.textContent = '—';
+        scoreEl.textContent = '0';
+        healthEl.textContent = '—';
+        levelEl.textContent = '—';
+        levelEl.style.color = '';
+
+        // Recent players: most recently played first, up to 6
+        const recent = Object.entries(loadScores())
+            .map(([name, v]) => ({ name, lastPlayed: v.lastPlayed || 0 }))
+            .sort((a, b) => b.lastPlayed - a.lastPlayed)
+            .slice(0, 6);
+
+        const recentHtml = recent.length === 0 ? '' : `
+            <p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>
+            <div class="recent-grid">
+                ${recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('')}
+            </div>
+        `;
+
+        overlay.innerHTML = `
+            <h2>🎯 בראול ארנה</h2>
+            <p>מה השם שלך?</p>
+            <form class="name-form" id="name-form" autocomplete="off">
+                <input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />
+                <button type="submit" class="primary-btn">🎮 שחק</button>
+            </form>
+            ${recentHtml}
+            ${leaderboardHtml()}
+        `;
+        overlay.style.display = 'flex';
+
+        const form  = document.getElementById('name-form');
+        const input = document.getElementById('name-input');
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            pickPlayer(input.value);
+        });
+        overlay.querySelectorAll('.player-btn').forEach(btn => {
+            btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+        });
+
+        // draw something behind the overlay
+        drawFloor();
+        drawWalls();
+
+        // Focus only on desktop — keeps the mobile keyboard from popping up unexpectedly
+        if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+            setTimeout(() => input.focus(), 50);
+        }
+    }
+
+    function showBrawlerSelect() {
+        const cards = Object.entries(BRAWLERS).map(([key, b]) => `
+            <button class="brawler-btn" data-key="${key}" style="border-color:${b.color}">
+                <span class="emoji">${b.emoji}</span>
+                <span>${b.name}</span>
+                <span class="desc">${b.desc}</span>
+                <span class="desc">❤️${b.hp} · ⚡${b.fireMs}ms</span>
+            </button>
+        `).join('');
+
+        overlay.innerHTML = `
+            <h2>בחר דמות</h2>
+            <p>שחקן: <strong style="color:#00ff88">${currentPlayer}</strong></p>
+            <div class="brawler-grid">${cards}</div>
+            <button id="btn-back" class="secondary-btn">↩️ חזור</button>
+        `;
+        overlay.style.display = 'flex';
+
+        overlay.querySelectorAll('.brawler-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentBrawlerKey = btn.dataset.key;
+                start();
+            });
+        });
+        document.getElementById('btn-back').addEventListener('click', showPlayerSelect);
+    }
+
+    function showGameOver() {
+        const scores = loadScores();
+        const myBest = scores[currentPlayer]?.best || 0;
+        const isNewRecord = score === myBest && score > 0;
+        const sorted = allPlayersSorted();
+        const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+
+        const lvlReached = getLevelFor(score);
+        let headline, msg;
+        if (isKing && isNewRecord) {
+            headline = '👑 מלך הטבלה!';
+            msg = `${currentPlayer} עלה לראש הטבלה עם ${score} הריגות (הגיע ל${lvlReached.name})! 🌟`;
+        } else if (isNewRecord) {
+            headline = '🎉 שיא אישי חדש!';
+            msg = `${currentPlayer} שבר שיא עם ${score} הריגות, הגיע ל${lvlReached.name}!`;
+        } else if (score >= 10) {
+            headline = '🏆 קרב טוב!';
+            msg = `${currentPlayer} עשה ${score} הריגות (${lvlReached.name}). השיא: ${myBest}`;
+        } else {
+            headline = '💀 הקרב נגמר';
+            msg = `${currentPlayer} עשה ${score} הריגות (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+        }
+
+        overlay.innerHTML = `
+            <h2>${headline}</h2>
+            <p>${msg}</p>
+            ${leaderboardHtml(currentPlayer)}
+            <div class="end-buttons">
+                <button id="btn-again"   class="primary-btn">🔄 שחק שוב</button>
+                <button id="btn-brawler" class="secondary-btn">⚔️ דמות אחרת</button>
+                <button id="btn-change"  class="secondary-btn">👥 שחקן אחר</button>
+            </div>
+        `;
+        overlay.style.display = 'flex';
+
+        document.getElementById('btn-again').addEventListener('click', start);
+        document.getElementById('btn-brawler').addEventListener('click', showBrawlerSelect);
+        document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+    }
+
+    function gameOver() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        stopMusic();
+        playGameOver();
+        saveResult(currentPlayer, score);
+        setTimeout(showGameOver, 600);
+    }
+
+    function start() {
+        if (!currentPlayer)      { showPlayerSelect();  return; }
+        if (!currentBrawlerKey)  { showBrawlerSelect(); return; }
+        overlay.style.display = 'none';
+        ensureAudio();
+        playStart();
+        resetGame();
+        running = true;
+        lastT     = performance.now();
+        lastSpawn = performance.now();
+        lastShot  = performance.now();
+        rafId = requestAnimationFrame(loop);
+        setTimeout(startMusic, 450);
+    }
+
+    // ================== Mute ==================
+    const muteBtn = document.getElementById('mute');
+    muteBtn.addEventListener('click', () => {
+        muted = !muted;
+        muteBtn.textContent = muted ? '🔇' : '🔊';
+    });
+
+    // ================== Auto-fit to screen ==================
+    function resizeGame() {
+        const wrap = document.getElementById('game-wrap');
+        wrap.style.width = '0px';
+        wrap.style.height = '0px';
+        void document.body.offsetHeight;
+
+        let chromeH = 0;
+        for (const c of document.body.children) {
+            if (c === wrap) continue;
+            const cs = getComputedStyle(c);
+            if (cs.position === 'fixed' || cs.display === 'none') continue;
+            chromeH += c.offsetHeight + parseFloat(cs.marginTop) + parseFloat(cs.marginBottom);
+        }
+        const bodyCs = getComputedStyle(document.body);
+        chromeH += parseFloat(bodyCs.paddingTop) + parseFloat(bodyCs.paddingBottom);
+
+        const availH = window.innerHeight - chromeH - 8;
+        const availW = window.innerWidth - 16;
+        const size = Math.max(180, Math.min(availW, availH));
+        wrap.style.width  = size + 'px';
+        wrap.style.height = size + 'px';
+    }
+    window.addEventListener('resize', resizeGame);
+    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 120));
+    resizeGame();
+
+    // ================== Boot ==================
+    drawFloor();
+    drawWalls();
+    showPlayerSelect();
+</script>
+</body>
+</html>

@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>פנדלים ⚽</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+        body {
+            background: linear-gradient(180deg, #4ea8e0 0%, #2d7d3d 60%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            color: white;
+            padding: 6px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3.3vw, 1.6em);
+            margin: 4px 0;
+            color: white;
+            text-shadow: 0 2px 0 #1a4a2e, 0 0 16px rgba(255,255,255,0.5);
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex; gap: 5px; margin-bottom: 6px;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .status-pill {
+            font-size: clamp(0.8em, 1.9vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.92);
+            border: 3px solid #1a4a2e;
+            border-radius: 25px;
+            color: #1a4a2e;
+            font-weight: bold;
+        }
+        #score   { color: #00a86b; }
+        #misses  { color: #d22e2e; }
+        #streak  { color: #ff8a00; }
+        #level   { color: #1a78c2; }
+        #current-player { color: #5a285a; }
+
+        #game-wrap {
+            position: relative;
+            width:  min(96vw, calc(100vh - 160px));
+            height: min(96vw, calc(100vh - 160px));
+            max-width: 96vw;
+            max-height: calc(100vh - 160px);
+        }
+        canvas {
+            display: block;
+            width: 100%; height: 100%;
+            border: 5px solid #1a4a2e;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(26,74,46,0.5);
+            background: #4ea8e0;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            background: rgba(20,40,30,0.93);
+            border-radius: 14px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+        #overlay h2 {
+            font-size: clamp(1.1em, 3.8vw, 1.9em);
+            color: #ffdd57;
+            text-shadow: 0 0 14px #ffdd57;
+            margin-bottom: 6px;
+        }
+        #overlay p {
+            font-size: clamp(0.85em, 2.2vw, 1.05em);
+            color: #e8ffe8;
+            margin-bottom: 8px;
+        }
+
+        .name-form { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .name-input {
+            width: 100%; padding: 10px 14px;
+            font-size: clamp(1em, 2.4vw, 1.1em);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            border: 3px solid #1a4a2e;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
+            color: #1a4a2e;
+            text-align: center; outline: none; font-weight: bold;
+        }
+        .name-input::placeholder { color: rgba(26,74,46,0.5); }
+        .name-input:focus { border-color: #ffdd57; }
+
+        .recent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; width: 100%; max-width: 360px; margin-bottom: 8px; }
+        .player-btn {
+            background: linear-gradient(135deg, #2d7d3d, #00a86b);
+            color: white; border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.85em, 2.2vw, 1em); font-weight: bold;
+            border-radius: 12px; cursor: pointer;
+            box-shadow: 0 4px 14px rgba(45,125,61,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .player-btn:active { transform: scale(1.08); }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #ffdd57, #ff8a00);
+            color: #1a4a2e; border: none;
+            padding: 10px 26px;
+            font-size: clamp(0.95em, 2.3vw, 1.1em); font-weight: bold;
+            border-radius: 24px; cursor: pointer;
+            box-shadow: 0 5px 18px rgba(255,221,87,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.18); color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 24px;
+            font-size: clamp(0.9em, 2.1vw, 1em); font-weight: bold;
+            border-radius: 24px; cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,221,87,0.5);
+            border-radius: 10px;
+            padding: 6px 12px; margin: 4px 0 8px;
+            width: 100%; max-width: 320px;
+        }
+        .leaderboard-title { color: #ffdd57; font-size: 0.95em; margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: 0.9em; }
+        .leaderboard td { padding: 3px 5px; color: #e8ffe8; }
+        .leaderboard tr.highlight td { background: rgba(255,221,87,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #ffdd57; font-weight: bold; width: 50px; }
+
+        #mute {
+            position: fixed;
+            top: 10px; left: 10px;
+            background: rgba(255,255,255,0.92);
+            border: 3px solid #1a4a2e;
+            color: #1a4a2e;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em; cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: #ffdd57; }
+
+        #hint {
+            margin-top: 5px;
+            color: white;
+            text-shadow: 0 1px 0 #1a4a2e;
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            text-align: center; padding: 0 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק">🔊</button>
+
+<h1>⚽ פנדלים - בעיטות עונשין ⚽</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">⚽ <span id="score">0</span></div>
+    <div class="status-pill">🔥 רצף: <span id="streak">0</span></div>
+    <div class="status-pill">🧤 <span id="misses">0</span>/5</div>
+    <div class="status-pill">🎯 <span id="level">1</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<p id="hint">🖱️ לחץ בדיוק במקום שאתה רוצה שהכדור יגיע - כל מקום על השער!</p>
+
+<script>
+'use strict';
+
+// ================== Setup ==================
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl  = document.getElementById('score');
+const missesEl = document.getElementById('misses');
+const streakEl = document.getElementById('streak');
+const levelEl  = document.getElementById('level');
+const currentPlayerEl = document.getElementById('current-player');
+
+const W = canvas.width, H = canvas.height;
+
+// Goal coordinates
+const GOAL_TOP    = 80;
+const GOAL_BOTTOM = 320;
+const GOAL_LEFT   = 100;
+const GOAL_RIGHT  = 600;
+const GOAL_W      = GOAL_RIGHT - GOAL_LEFT;
+const GOAL_H      = GOAL_BOTTOM - GOAL_TOP;
+
+const KICK_X      = W / 2;
+const KICK_Y      = H - 80;
+
+// Goalie
+const GOALIE_HOME = { x: GOAL_LEFT + GOAL_W / 2, y: GOAL_TOP + GOAL_H * 0.55 };
+const GOALIE_CATCH_R = 70;       // pixels — radius around goalie's hands
+
+// ================== Levels ==================
+// goalieSkill = probability goalie aims close to player's shot.
+// errorRadius = how far off the goalie's read is (smaller = smarter).
+const LEVELS = [
+    { num: 1, name: 'שלב 1 · קל',         minScore: 0,  goalieSkill: 0.25, errR: 130, color: '#9bff66' },
+    { num: 2, name: 'שלב 2 · קל-בינוני',   minScore: 5,  goalieSkill: 0.35, errR: 110, color: '#cffd5e' },
+    { num: 3, name: 'שלב 3 · בינוני',      minScore: 12, goalieSkill: 0.45, errR:  95, color: '#ffdd57' },
+    { num: 4, name: 'שלב 4 · די קשה',      minScore: 22, goalieSkill: 0.55, errR:  80, color: '#ffb347' },
+    { num: 5, name: 'שלב 5 · קשה',        minScore: 35, goalieSkill: 0.65, errR:  65, color: '#ff7733' },
+    { num: 6, name: 'שלב 6 · קשה מאוד',   minScore: 50, goalieSkill: 0.75, errR:  50, color: '#ff3366' },
+    { num: 7, name: 'שלב 7 · בטירוף 🔥',   minScore: 70, goalieSkill: 0.85, errR:  35, color: '#c92a52' },
+];
+function getLevelFor(score) {
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (score >= LEVELS[i].minScore) return LEVELS[i];
+    }
+    return LEVELS[0];
+}
+function nextLevelGoal(level) {
+    const next = LEVELS.find(l => l.num === level.num + 1);
+    return next ? next.minScore : null;
+}
+
+// ================== Scoreboard ==================
+const STORAGE_KEY = 'rom_penalty_scores_v1';
+let currentPlayer = null;
+
+function loadScores() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+}
+function saveResult(player, finalScore) {
+    const scores = loadScores();
+    const e = scores[player] || { best: 0, games: 0, last: 0 };
+    if (finalScore > e.best) e.best = finalScore;
+    e.games = (e.games || 0) + 1;
+    e.last  = finalScore;
+    e.lastPlayed = Date.now();
+    scores[player] = e;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+}
+function allPlayersSorted() {
+    return Object.entries(loadScores())
+        .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+}
+function leaderboardHtml(highlight) {
+    const entries = allPlayersSorted().slice(0, 8);
+    if (entries.length === 0) {
+        return '<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><p style="color:#aaa;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! ⚽</p></div>';
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = entries.map((e, i) => {
+        const rank = i < 3 ? medals[i] : `${i + 1}.`;
+        const clsAttr = e.name === highlight ? ' class="highlight"' : '';
+        return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+    }).join('');
+    return `<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><table>${rows}</table></div>`;
+}
+
+// ================== Game state ==================
+let running = false;
+let rafId = null;
+
+let score = 0;
+let misses = 0;
+let streak = 0;
+let currentLevel = LEVELS[0];
+let levelBanner = null;
+
+let phase = 'aim';      // 'aim' | 'shoot' | 'resolve'
+let aim = null;         // {x, y} where the player aimed
+let goalieTarget = null;// {x, y} where the goalie dove
+let hoverPoint = null;  // {x, y} desktop mouse hover
+let shotT = 0;
+let resolveT = 0;
+let result = null;      // 'goal' | 'save' | 'miss'
+let confetti = [];
+
+function resetGame() {
+    score = 0; misses = 0; streak = 0;
+    currentLevel = LEVELS[0];
+    levelBanner = { text: '⚽ ' + currentLevel.name, life: 1.6 };
+    phase = 'aim';
+    aim = null; goalieTarget = null;
+    shotT = 0; resolveT = 0;
+    result = null;
+    confetti = [];
+    scoreEl.textContent = '0';
+    missesEl.textContent = '0';
+    streakEl.textContent = '0';
+    updateLevelUi();
+}
+function updateLevelUi() {
+    const goal = nextLevelGoal(currentLevel);
+    levelEl.textContent = goal !== null
+        ? `${currentLevel.num} (${score}/${goal})`
+        : `${currentLevel.num} 🔥`;
+}
+
+// ================== Sound ==================
+let audioCtx = null;
+let muted = false;
+function ensureAudio() {
+    if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+}
+function tone(freq, duration, type, vol, delay) {
+    if (muted) return;
+    const c = ensureAudio();
+    if (!c) return;
+    const t0 = c.currentTime + (delay || 0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol == null ? 0.1 : vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + duration);
+}
+function playKick()    { tone(180, 0.08, 'square', 0.18, 0); tone(120, 0.10, 'sawtooth', 0.14, 0.04); }
+function playGoal()    {
+    tone(523, 0.08, 'square', 0.16, 0);
+    tone(659, 0.08, 'square', 0.16, 0.07);
+    tone(784, 0.08, 'square', 0.16, 0.14);
+    tone(1047,0.18, 'square', 0.18, 0.21);
+    tone(300, 0.45, 'sawtooth', 0.05, 0.10);
+    tone(380, 0.45, 'sawtooth', 0.05, 0.10);
+}
+function playSave()    { tone(280, 0.15, 'sawtooth', 0.16, 0); tone(180, 0.25, 'sawtooth', 0.16, 0.13); }
+function playMissOff() { tone(200, 0.30, 'sawtooth', 0.16, 0); tone(140, 0.40, 'sawtooth', 0.14, 0.15); }
+function playStreak()  { tone(900, 0.06, 'square', 0.14, 0); tone(1100,0.08, 'square', 0.14, 0.06); }
+function playStart()   {
+    tone(523, 0.10, 'triangle', 0.18, 0);
+    tone(659, 0.10, 'triangle', 0.18, 0.10);
+    tone(784, 0.16, 'triangle', 0.18, 0.20);
+}
+function playGameOver(){
+    tone(392, 0.18, 'sawtooth', 0.16, 0);
+    tone(294, 0.18, 'sawtooth', 0.16, 0.18);
+    tone(196, 0.35, 'sawtooth', 0.16, 0.36);
+}
+function playLevelUp() {
+    tone(523, 0.10, 'square', 0.16, 0);
+    tone(659, 0.10, 'square', 0.16, 0.10);
+    tone(784, 0.10, 'square', 0.16, 0.20);
+    tone(1047,0.22, 'square', 0.18, 0.30);
+}
+const MUSIC_NOTES = [330, 392, 440, 392, 330, 294, 330, 392, 494, 440, 392, 330];
+const BASS_NOTES  = [ 82,  82,  87,  87,  82,  73,  82,  82,  98,  98,  87,  87];
+const NOTE_MS = 240;
+let musicTimer = null, musicStep = 0;
+function playMusicTick() {
+    if (muted) { musicStep++; return; }
+    const i = musicStep % MUSIC_NOTES.length;
+    tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'triangle', 0.05, 0);
+    if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.05, 0);
+    musicStep++;
+}
+function startMusic() {
+    stopMusic(); musicStep = 0;
+    playMusicTick();
+    musicTimer = setInterval(playMusicTick, NOTE_MS);
+}
+function stopMusic() {
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+}
+
+// ================== Shot logic ==================
+function chooseGoalieTarget(aim) {
+    const skill = currentLevel.goalieSkill;
+    if (Math.random() < skill) {
+        // Reads player's aim — lands near it with some error
+        const errR = currentLevel.errR;
+        const a = Math.random() * Math.PI * 2;
+        const r = Math.random() * errR;
+        return {
+            x: aim.x + Math.cos(a) * r,
+            y: aim.y + Math.sin(a) * r,
+        };
+    } else {
+        // Guesses randomly somewhere inside the goal
+        return {
+            x: GOAL_LEFT + 40 + Math.random() * (GOAL_W - 80),
+            y: GOAL_TOP  + 30 + Math.random() * (GOAL_H - 60),
+        };
+    }
+}
+
+function spawnConfetti(x, y) {
+    for (let i = 0; i < 30; i++) {
+        const angle = -Math.PI/2 + (Math.random() - 0.5) * 1.4;
+        const speed = 150 + Math.random() * 300;
+        confetti.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 80,
+            life: 1.2 + Math.random() * 0.6,
+            color: ['#ff3366','#ffdd57','#5cc8ff','#9bff66','#ff8a00'][Math.floor(Math.random()*5)],
+            size: 5 + Math.random() * 4,
+            rot: Math.random() * Math.PI,
+            rotSpeed: (Math.random() - 0.5) * 8,
+        });
+    }
+}
+
+function takeShot(x, y) {
+    if (phase !== 'aim') return;
+    aim = { x, y };
+    goalieTarget = chooseGoalieTarget(aim);
+    shotT = 0;
+    phase = 'shoot';
+    playKick();
+}
+
+function resolveShot() {
+    // Off-target?
+    const inGoal = aim.x >= GOAL_LEFT - 5 && aim.x <= GOAL_RIGHT + 5 &&
+                   aim.y >= GOAL_TOP  - 5 && aim.y <= GOAL_BOTTOM + 5;
+    if (!inGoal) {
+        result = 'miss';
+        misses++;
+        streak = 0;
+        missesEl.textContent = misses;
+        streakEl.textContent = '0';
+        playMissOff();
+    } else {
+        const dx = aim.x - goalieTarget.x;
+        const dy = aim.y - goalieTarget.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < GOALIE_CATCH_R) {
+            result = 'save';
+            misses++;
+            streak = 0;
+            missesEl.textContent = misses;
+            streakEl.textContent = '0';
+            playSave();
+        } else {
+            result = 'goal';
+            score++;
+            streak++;
+            scoreEl.textContent = score;
+            streakEl.textContent = streak;
+            playGoal();
+            spawnConfetti(aim.x, aim.y);
+            const lvl = getLevelFor(score);
+            if (lvl.num !== currentLevel.num) {
+                currentLevel = lvl;
+                levelBanner = { text: lvl.name, life: 2.0 };
+                playLevelUp();
+            }
+            updateLevelUi();
+            if (streak > 0 && streak % 5 === 0) setTimeout(playStreak, 600);
+        }
+    }
+    phase = 'resolve';
+    resolveT = 0;
+}
+
+// ================== Input ==================
+function getCanvasPoint(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (clientX - rect.left) * (W / rect.width),
+        y: (clientY - rect.top)  * (H / rect.height),
+    };
+}
+
+canvas.addEventListener('mousemove', e => {
+    const p = getCanvasPoint(e.clientX, e.clientY);
+    hoverPoint = p;
+});
+canvas.addEventListener('mouseleave', () => { hoverPoint = null; });
+
+canvas.addEventListener('mousedown', e => {
+    if (phase !== 'aim') return;
+    const p = getCanvasPoint(e.clientX, e.clientY);
+    takeShot(p.x, p.y);
+});
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (phase !== 'aim') return;
+    const t = e.changedTouches[0];
+    const p = getCanvasPoint(t.clientX, t.clientY);
+    takeShot(p.x, p.y);
+}, { passive: false });
+
+// Keyboard fallback: aim at preset spots (left top / center / right top corners)
+document.addEventListener('keydown', e => {
+    if (phase !== 'aim') return;
+    const k = e.key.toLowerCase();
+    if (k === 'arrowleft'  || k === 'a') { takeShot(GOAL_LEFT + 50,  GOAL_TOP + 50); e.preventDefault(); }
+    else if (k === 'arrowright' || k === 'd') { takeShot(GOAL_RIGHT - 50, GOAL_TOP + 50); e.preventDefault(); }
+    else if (k === 'arrowup'    || k === 'w' || k === ' ') { takeShot(GOAL_LEFT + GOAL_W/2, GOAL_TOP + 50); e.preventDefault(); }
+    else if (k === 'arrowdown'  || k === 's') { takeShot(GOAL_LEFT + GOAL_W/2, GOAL_BOTTOM - 30); e.preventDefault(); }
+});
+
+// ================== Update ==================
+function update(dt) {
+    if (phase === 'shoot') {
+        shotT += dt * 1.6;
+        if (shotT >= 1) {
+            shotT = 1;
+            resolveShot();
+        }
+    } else if (phase === 'resolve') {
+        resolveT += dt;
+        if (resolveT >= 1.4) {
+            if (misses >= 5) { gameOver(); return; }
+            phase = 'aim';
+            shotT = 0; resolveT = 0;
+            aim = null; goalieTarget = null;
+            result = null;
+        }
+    }
+
+    confetti = confetti.filter(c => {
+        c.x += c.vx * dt;
+        c.y += c.vy * dt;
+        c.vy += 400 * dt;
+        c.rot += c.rotSpeed * dt;
+        c.life -= dt;
+        return c.life > 0 && c.y < H + 30;
+    });
+
+    if (levelBanner) {
+        levelBanner.life -= dt;
+        if (levelBanner.life <= 0) levelBanner = null;
+    }
+}
+
+// ================== Render ==================
+function drawSky() {
+    const grad = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+    grad.addColorStop(0, '#4ea8e0');
+    grad.addColorStop(1, '#a8d8f8');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H * 0.5);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    [[80,40,18],[200,28,16],[480,50,20],[600,32,15]].forEach(([cx,cy,cr])=>{
+        ctx.beginPath();
+        ctx.arc(cx,    cy, cr, 0, Math.PI*2);
+        ctx.arc(cx+18, cy-4, cr*1.1, 0, Math.PI*2);
+        ctx.arc(cx+36, cy, cr*0.9, 0, Math.PI*2);
+        ctx.fill();
+    });
+}
+
+function drawField() {
+    const grassTop = GOAL_BOTTOM;
+    const grad = ctx.createLinearGradient(0, grassTop, 0, H);
+    grad.addColorStop(0, '#2d7d3d');
+    grad.addColorStop(1, '#1c5028');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, grassTop, W, H - grassTop);
+    ctx.fillStyle = 'rgba(0,0,0,0.07)';
+    for (let i = 0; i < 6; i++) {
+        if (i % 2 === 0) continue;
+        const y = grassTop + (i / 6) * (H - grassTop);
+        ctx.fillRect(0, y, W, (H - grassTop) / 6);
+    }
+    // Penalty spot
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(KICK_X, KICK_Y - 25, 5, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawGoal() {
+    // Net
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillRect(GOAL_LEFT, GOAL_TOP, GOAL_W, GOAL_H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1;
+    const cellW = 22, cellH = 20;
+    for (let x = GOAL_LEFT; x <= GOAL_RIGHT; x += cellW) {
+        ctx.beginPath(); ctx.moveTo(x, GOAL_TOP); ctx.lineTo(x, GOAL_BOTTOM); ctx.stroke();
+    }
+    for (let y = GOAL_TOP; y <= GOAL_BOTTOM; y += cellH) {
+        ctx.beginPath(); ctx.moveTo(GOAL_LEFT, y); ctx.lineTo(GOAL_RIGHT, y); ctx.stroke();
+    }
+    // Frame
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 2;
+    const postW = 10;
+    ctx.fillRect(GOAL_LEFT - postW, GOAL_TOP - postW, postW, GOAL_H + postW * 2);
+    ctx.strokeRect(GOAL_LEFT - postW, GOAL_TOP - postW, postW, GOAL_H + postW * 2);
+    ctx.fillRect(GOAL_RIGHT, GOAL_TOP - postW, postW, GOAL_H + postW * 2);
+    ctx.strokeRect(GOAL_RIGHT, GOAL_TOP - postW, postW, GOAL_H + postW * 2);
+    ctx.fillRect(GOAL_LEFT - postW, GOAL_TOP - postW, GOAL_W + postW * 2, postW);
+    ctx.strokeRect(GOAL_LEFT - postW, GOAL_TOP - postW, GOAL_W + postW * 2, postW);
+}
+
+function drawGoalie() {
+    let gx, gy;
+    if (phase === 'aim') {
+        gx = GOALIE_HOME.x; gy = GOALIE_HOME.y;
+    } else if (phase === 'shoot') {
+        const t = Math.min(1, shotT / 0.9);
+        const ease = t * t * (3 - 2 * t);
+        gx = GOALIE_HOME.x + (goalieTarget.x - GOALIE_HOME.x) * ease;
+        gy = GOALIE_HOME.y + (goalieTarget.y - GOALIE_HOME.y) * ease;
+    } else {
+        gx = goalieTarget.x; gy = goalieTarget.y;
+    }
+
+    ctx.save();
+    ctx.translate(gx, gy);
+    // Tilt toward dive direction
+    if (phase !== 'aim') {
+        const dx = goalieTarget.x - GOALIE_HOME.x;
+        const tilt = Math.max(-0.6, Math.min(0.6, dx / 200));
+        ctx.rotate(tilt);
+    }
+
+    // Body
+    ctx.fillStyle = '#ff8a00';
+    ctx.strokeStyle = '#8a4a00';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-22, -10, 44, 50, 8);
+    else                  ctx.rect(-22, -10, 44, 50);
+    ctx.fill(); ctx.stroke();
+    // Head
+    ctx.fillStyle = '#f5d3a0';
+    ctx.beginPath(); ctx.arc(0, -25, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // Eyes
+    ctx.fillStyle = 'white';
+    ctx.beginPath(); ctx.arc(-5, -27, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 5, -27, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-5, -27, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 5, -27, 1.5, 0, Math.PI * 2); ctx.fill();
+    // Concentrated mouth
+    ctx.strokeStyle = '#5a3300'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-4, -18); ctx.lineTo(4, -18); ctx.stroke();
+    // Arms
+    ctx.fillStyle = '#ff8a00';
+    ctx.strokeStyle = '#8a4a00';
+    ctx.lineWidth = 2;
+    if (phase === 'aim') {
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-32, 0, 12, 30, 5); else ctx.rect(-32, 0, 12, 30); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect( 20, 0, 12, 30, 5); else ctx.rect( 20, 0, 12, 30); ctx.fill(); ctx.stroke();
+    } else {
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-44, -8, 22, 14, 5); else ctx.rect(-44, -8, 22, 14); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect( 22, -8, 22, 14, 5); else ctx.rect( 22, -8, 22, 14); ctx.fill(); ctx.stroke();
+        // Gloves
+        ctx.fillStyle = '#ffdd57';
+        ctx.strokeStyle = '#a86d00';
+        ctx.beginPath(); ctx.arc(-50, -1, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc( 50, -1, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    // Legs
+    ctx.fillStyle = '#222';
+    ctx.fillRect(-18, 40, 14, 16);
+    ctx.fillRect(  4, 40, 14, 16);
+
+    ctx.restore();
+}
+
+function drawBall() {
+    let bx, by;
+    if (phase === 'aim') {
+        bx = KICK_X; by = KICK_Y;
+    } else {
+        const t = Math.min(1, shotT);
+        bx = KICK_X + (aim.x - KICK_X) * t;
+        const baseY = KICK_Y + (aim.y - KICK_Y) * t;
+        const arcHeight = 100;
+        by = baseY - arcHeight * Math.sin(Math.PI * t);
+    }
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(bx, KICK_Y + 5, 14, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Ball
+    const rot = phase === 'aim' ? 0 : shotT * 12;
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(rot);
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.lineTo(8, -4); ctx.lineTo(8, 4); ctx.lineTo(0, 10); ctx.lineTo(-8, 4); ctx.lineTo(-8, -4);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+}
+
+function drawKicker() {
+    if (phase !== 'aim') return;
+    const x = KICK_X - 40, y = KICK_Y - 30;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = '#1a78c2';
+    ctx.strokeStyle = '#0a3c6a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(-15, -5, 30, 40, 6);
+    else                  ctx.rect(-15, -5, 30, 40);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#f5d3a0';
+    ctx.beginPath(); ctx.arc(0, -18, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-3, -19, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 3, -19, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#5a3300'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(0, -14, 3, 0, Math.PI); ctx.stroke();
+    ctx.fillStyle = '#222';
+    ctx.fillRect(-10, 35, 8, 16);
+    ctx.fillRect(  2, 35, 8, 16);
+    ctx.restore();
+}
+
+function drawHoverIndicator() {
+    if (phase !== 'aim' || !hoverPoint) return;
+    const inGoal = hoverPoint.x >= GOAL_LEFT - 5 && hoverPoint.x <= GOAL_RIGHT + 5 &&
+                   hoverPoint.y >= GOAL_TOP  - 5 && hoverPoint.y <= GOAL_BOTTOM + 5;
+    const color = inGoal ? '#ffdd57' : '#ff5577';
+    // Crosshair
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath(); ctx.arc(hoverPoint.x, hoverPoint.y, 18, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(hoverPoint.x - 10, hoverPoint.y); ctx.lineTo(hoverPoint.x + 10, hoverPoint.y);
+    ctx.moveTo(hoverPoint.x, hoverPoint.y - 10); ctx.lineTo(hoverPoint.x, hoverPoint.y + 10);
+    ctx.stroke();
+    // Faint trajectory line from ball to hover
+    ctx.strokeStyle = 'rgba(255,221,87,0.4)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath(); ctx.moveTo(KICK_X, KICK_Y); ctx.lineTo(hoverPoint.x, hoverPoint.y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+function drawConfetti() {
+    for (const c of confetti) {
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.globalAlpha = Math.max(0, Math.min(1, c.life));
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size/2, -c.size/4, c.size, c.size/2);
+        ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawResult() {
+    if (phase !== 'resolve') return;
+    const a = Math.min(1, resolveT * 3);
+    let text, color;
+    if (result === 'goal')      { text = '⚽ GOAL! גול! ⚽'; color = '#ffdd57'; }
+    else if (result === 'save') { text = '🧤 SAVE! בלימה! 🧤'; color = '#5cc8ff'; }
+    else                        { text = '😬 החטאת! מחוץ למסגרת'; color = '#ff5577'; }
+
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 50px Comic Sans MS, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+    ctx.lineWidth = 7;
+    ctx.fillStyle = color;
+    ctx.shadowBlur = 25; ctx.shadowColor = color;
+    ctx.strokeText(text, W/2, H/2 + 80);
+    ctx.fillText(text, W/2, H/2 + 80);
+    ctx.restore();
+}
+
+function drawLevelBanner() {
+    if (!levelBanner) return;
+    const a = Math.min(1, levelBanner.life / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 36px Comic Sans MS, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = levelBanner.text;
+    const padX = 22, padY = 12;
+    const m = ctx.measureText(text);
+    const bw = m.width + padX * 2;
+    const bh = 36 + padY * 2;
+    const bx = W / 2 - bw / 2;
+    const by = 380 - bh / 2;
+    ctx.fillStyle = 'rgba(20,40,30,0.85)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+    else                  ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = currentLevel.color;
+    ctx.lineWidth = 4;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+    else                  ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = currentLevel.color;
+    ctx.shadowBlur = 18; ctx.shadowColor = currentLevel.color;
+    ctx.fillText(text, W / 2, 380);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+}
+
+function drawHud() {
+    if (phase === 'aim') {
+        ctx.font = 'bold 22px Comic Sans MS, Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+        ctx.lineWidth = 4;
+        const text = '👇 לחץ לאן לבעוט!';
+        ctx.strokeText(text, W/2, H - 30);
+        ctx.fillText(text, W/2, H - 30);
+    }
+}
+
+function render() {
+    drawSky();
+    drawField();
+    drawGoal();
+    drawGoalie();
+    drawHoverIndicator();
+    drawBall();
+    drawKicker();
+    drawConfetti();
+    drawResult();
+    drawLevelBanner();
+    drawHud();
+}
+
+// ================== Loop ==================
+function loop(t) {
+    if (!running) return;
+    const dt = Math.min((t - lastT) / 1000, 0.05);
+    lastT = t;
+    update(dt);
+    render();
+    if (running) rafId = requestAnimationFrame(loop);
+}
+let lastT = 0;
+
+// ================== Menus ==================
+function pickPlayer(name) {
+    const clean = (name || '').trim().slice(0, 20);
+    if (!clean) return;
+    currentPlayer = clean;
+    currentPlayerEl.textContent = currentPlayer;
+    start();
+}
+function showPlayerSelect() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    currentPlayer = null;
+    currentPlayerEl.textContent = '—';
+    scoreEl.textContent = '0';
+    missesEl.textContent = '0';
+    streakEl.textContent = '0';
+    levelEl.textContent = '—';
+
+    const recent = Object.entries(loadScores())
+        .map(([name, v]) => ({ name: name, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.lastPlayed - a.lastPlayed)
+        .slice(0, 6);
+    const recentHtml = recent.length === 0 ? '' :
+        '<p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>' +
+        '<div class="recent-grid">' +
+            recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('') +
+        '</div>';
+
+    overlay.innerHTML =
+        '<h2>⚽ פנדלים</h2>' +
+        '<p>מה השם שלך?</p>' +
+        '<form class="name-form" id="name-form" autocomplete="off">' +
+            '<input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />' +
+            '<button type="submit" class="primary-btn">⚽ בעט!</button>' +
+        '</form>' +
+        recentHtml +
+        leaderboardHtml(null);
+    overlay.style.display = 'flex';
+
+    const form  = document.getElementById('name-form');
+    const input = document.getElementById('name-input');
+    form.addEventListener('submit', e => { e.preventDefault(); pickPlayer(input.value); });
+    overlay.querySelectorAll('.player-btn').forEach(btn => {
+        btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+    });
+
+    drawSky();
+    drawField();
+    drawGoal();
+
+    if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+        setTimeout(() => input.focus(), 50);
+    }
+}
+function showGameOver() {
+    const scores = loadScores();
+    const myBest = (scores[currentPlayer] && scores[currentPlayer].best) || 0;
+    const isNewRecord = score === myBest && score > 0;
+    const sorted = allPlayersSorted();
+    const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+    const lvlReached = getLevelFor(score);
+
+    let headline, msg;
+    if (isKing && isNewRecord) {
+        headline = '👑 מלך הפנדלים!';
+        msg = `${currentPlayer} עלה לראש הטבלה עם ${score} גולים (${lvlReached.name})! 🌟`;
+    } else if (isNewRecord) {
+        headline = '🎉 שיא אישי חדש!';
+        msg = `${currentPlayer} הבקיע ${score} גולים, הגיע ל${lvlReached.name}!`;
+    } else if (score >= 10) {
+        headline = '🏆 משחק טוב!';
+        msg = `${currentPlayer} הבקיע ${score} גולים (${lvlReached.name}). השיא: ${myBest}`;
+    } else {
+        headline = '🧤 השוער ניצח!';
+        msg = `${currentPlayer} הבקיע ${score} גולים (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+    }
+
+    overlay.innerHTML =
+        `<h2>${headline}</h2>` +
+        `<p>${msg}</p>` +
+        leaderboardHtml(currentPlayer) +
+        '<div class="end-buttons">' +
+            '<button id="btn-again"  class="primary-btn">🔄 שחק שוב</button>' +
+            '<button id="btn-change" class="secondary-btn">👥 שחקן אחר</button>' +
+        '</div>';
+    overlay.style.display = 'flex';
+
+    document.getElementById('btn-again').addEventListener('click', start);
+    document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+}
+function gameOver() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    playGameOver();
+    saveResult(currentPlayer, score);
+    setTimeout(showGameOver, 700);
+}
+function start() {
+    if (!currentPlayer) { showPlayerSelect(); return; }
+    overlay.style.display = 'none';
+    ensureAudio();
+    playStart();
+    resetGame();
+    running = true;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(loop);
+    setTimeout(startMusic, 450);
+}
+
+// ================== Mute ==================
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', function () {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+});
+
+// ================== Boot ==================
+drawSky();
+drawField();
+drawGoal();
+showPlayerSelect();
+</script>
+</body>
+</html>

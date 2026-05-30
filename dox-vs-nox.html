@@ -1598,8 +1598,8 @@ function updatePlayer(dt) {
     } else {
         if (keys['w'] || keys['KeyW'] || keys['arrowup'])    mz -= 1;
         if (keys['s'] || keys['KeyS'] || keys['arrowdown'])  mz += 1;
-        if (keys['a'] || keys['KeyA'] || keys['arrowleft'])  mx -= 1;
-        if (keys['d'] || keys['KeyD'] || keys['arrowright']) mx += 1;
+        if (keys['a'] || keys['KeyA'] || keys['arrowleft'])  mx += 1;   // A = strafe left (from player POV)
+        if (keys['d'] || keys['KeyD'] || keys['arrowright']) mx -= 1;   // D = strafe right (from player POV)
     }
 
     const len = Math.hypot(mx, mz);

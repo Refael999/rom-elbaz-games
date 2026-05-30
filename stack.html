@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>מגדל בלוקים 🏗️</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+        body {
+            background: linear-gradient(135deg, #0a0e2a, #1a1a4e, #2d1b69);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            color: white;
+            padding: 6px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3.3vw, 1.6em);
+            margin: 4px 0;
+            color: white;
+            text-shadow: 0 2px 0 #1a78c2, 0 0 16px rgba(120,180,255,0.7);
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .status-pill {
+            font-size: clamp(0.8em, 1.9vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.92);
+            border: 3px solid #5cc8ff;
+            border-radius: 25px;
+            color: #14224a;
+            font-weight: bold;
+        }
+        #score   { color: #00a86b; }
+        #height  { color: #d22e6b; }
+        #level   { color: #ff8a00; }
+        #current-player { color: #1a78c2; }
+
+        #game-wrap {
+            position: relative;
+            width:  min(96vw, calc(100vh - 160px));
+            height: min(96vw, calc(100vh - 160px));
+            max-width: 96vw;
+            max-height: calc(100vh - 160px);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 5px solid #5cc8ff;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(92,200,255,0.55);
+            background: #0a0e2a;
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            background: rgba(10,14,42,0.94);
+            border-radius: 14px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+        #overlay h2 {
+            font-size: clamp(1.1em, 3.8vw, 1.9em);
+            color: #ffdd57;
+            text-shadow: 0 0 14px #ffdd57;
+            margin-bottom: 6px;
+        }
+        #overlay p {
+            font-size: clamp(0.85em, 2.2vw, 1.05em);
+            color: #e9f3ff;
+            margin-bottom: 8px;
+        }
+
+        .name-form { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .name-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: clamp(1em, 2.4vw, 1.1em);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            border: 3px solid #5cc8ff;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
+            color: #14224a;
+            text-align: center;
+            outline: none;
+            font-weight: bold;
+        }
+        .name-input::placeholder { color: rgba(20,34,74,0.5); }
+        .name-input:focus { border-color: #ffdd57; }
+
+        .recent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; width: 100%; max-width: 360px; margin-bottom: 8px; }
+        .player-btn {
+            background: linear-gradient(135deg, #5cc8ff, #1a78c2);
+            color: white;
+            border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.85em, 2.2vw, 1em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(92,200,255,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .player-btn:active { transform: scale(1.08); }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #ffdd57, #ff8a00);
+            color: #14224a;
+            border: none;
+            padding: 10px 26px;
+            font-size: clamp(0.95em, 2.3vw, 1.1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 18px rgba(255,221,87,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 24px;
+            font-size: clamp(0.9em, 2.1vw, 1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(92,200,255,0.5);
+            border-radius: 10px;
+            padding: 6px 12px;
+            margin: 4px 0 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .leaderboard-title { color: #ffdd57; font-size: 0.95em; margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: 0.9em; }
+        .leaderboard td { padding: 3px 5px; color: #e9f3ff; }
+        .leaderboard tr.highlight td { background: rgba(255,221,87,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #ffdd57; font-weight: bold; width: 50px; }
+
+        #mute {
+            position: fixed;
+            top: 10px; left: 10px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid #5cc8ff;
+            color: #14224a;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: #ffdd57; }
+
+        #hint {
+            margin-top: 5px;
+            color: white;
+            text-shadow: 0 1px 0 #14224a;
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            text-align: center;
+            padding: 0 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק">🔊</button>
+
+<h1>🏗️ מגדל בלוקים 🏗️</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">📏 <span id="height">0</span></div>
+    <div class="status-pill">⚡ <span id="score">0</span></div>
+    <div class="status-pill">🎯 <span id="level">1</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<p id="hint">👆 הקלק כדי להניח את הבלוק — דיוק = יותר נקודות!</p>
+
+<script>
+'use strict';
+
+// ================== Setup ==================
+const canvas  = document.getElementById('c');
+const ctx     = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl  = document.getElementById('score');
+const heightEl = document.getElementById('height');
+const levelEl  = document.getElementById('level');
+const currentPlayerEl = document.getElementById('current-player');
+
+const W = canvas.width;     // 700
+const H = canvas.height;    // 700
+const BLOCK_H = 28;
+const START_W = 200;
+const PERFECT_TOLERANCE = 4;
+
+// ================== Levels ==================
+const LEVELS = [
+    { num: 1, name: 'שלב 1 · קל',           minScore: 0,   speed: 250, color: '#5cc8ff' },
+    { num: 2, name: 'שלב 2 · קל-בינוני',     minScore: 10,  speed: 310, color: '#9bff66' },
+    { num: 3, name: 'שלב 3 · בינוני',        minScore: 25,  speed: 370, color: '#ffdd57' },
+    { num: 4, name: 'שלב 4 · די קשה',        minScore: 45,  speed: 440, color: '#ffb347' },
+    { num: 5, name: 'שלב 5 · קשה',          minScore: 70,  speed: 510, color: '#ff7733' },
+    { num: 6, name: 'שלב 6 · קשה מאוד',     minScore: 100, speed: 590, color: '#ff3366' },
+    { num: 7, name: 'שלב 7 · בטירוף 🔥',     minScore: 140, speed: 680, color: '#c92a52' },
+];
+function getLevelFor(score) {
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (score >= LEVELS[i].minScore) return LEVELS[i];
+    }
+    return LEVELS[0];
+}
+function nextLevelGoal(level) {
+    const next = LEVELS.find(l => l.num === level.num + 1);
+    return next ? next.minScore : null;
+}
+
+// ================== Scoreboard ==================
+const STORAGE_KEY = 'rom_stack_scores_v1';
+let currentPlayer = null;
+
+function loadScores() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+}
+function saveResult(player, finalScore) {
+    const scores = loadScores();
+    const e = scores[player] || { best: 0, games: 0, last: 0 };
+    if (finalScore > e.best) e.best = finalScore;
+    e.games = (e.games || 0) + 1;
+    e.last  = finalScore;
+    e.lastPlayed = Date.now();
+    scores[player] = e;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+}
+function allPlayersSorted() {
+    return Object.entries(loadScores())
+        .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+}
+function leaderboardHtml(highlight) {
+    const entries = allPlayersSorted().slice(0, 8);
+    if (entries.length === 0) {
+        return '<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><p style="color:#aaa;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! 🏗️</p></div>';
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = entries.map((e, i) => {
+        const rank = i < 3 ? medals[i] : `${i + 1}.`;
+        const clsAttr = e.name === highlight ? ' class="highlight"' : '';
+        return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+    }).join('');
+    return `<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><table>${rows}</table></div>`;
+}
+
+// ================== Game state ==================
+let running = false;
+let rafId = null;
+let stack = [];           // placed blocks {x, w, y, hue}
+let fallingPieces = [];   // cut-off pieces {x, y, w, h, vy, vx, vr, rot, hue, life}
+let droppingBlock = null; // animating fall after drop {x, w, y, targetY, hue}
+let movingBlock = null;   // currently sliding block {x, w, dir, hue}
+let sparkles = [];
+let popups = [];
+let stars = [];
+let bgPhase = 0;
+let cameraY = 0;          // world y offset
+let targetCameraY = 0;
+let shake = 0;
+let score = 0;
+let combo = 0;
+let towerHeight = 0;
+let lastT = 0;
+let currentLevel = LEVELS[0];
+let levelBanner = null;
+let nextBlockPitch = 240;
+
+function resetGame() {
+    stack = [];
+    fallingPieces = [];
+    droppingBlock = null;
+    movingBlock = null;
+    sparkles = [];
+    popups = [];
+    bgPhase = 0;
+    cameraY = 0;
+    targetCameraY = 0;
+    shake = 0;
+    score = 0;
+    combo = 0;
+    towerHeight = 0;
+    nextBlockPitch = 240;
+    currentLevel = LEVELS[0];
+    levelBanner = { text: '🏗️ ' + currentLevel.name, life: 1.8 };
+
+    // Init background stars (parallax dust)
+    stars = [];
+    for (let i = 0; i < 80; i++) {
+        stars.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.6 + 0.4,
+            tw: Math.random() * Math.PI * 2,
+        });
+    }
+
+    // Platform block at bottom-center
+    const platformY = H - 80;
+    stack.push({
+        x: (W - START_W) / 2,
+        w: START_W,
+        y: platformY,
+        hue: 200,
+    });
+    towerHeight = 1;
+
+    // First moving block on top
+    spawnMovingBlock();
+
+    scoreEl.textContent = '0';
+    heightEl.textContent = '1';
+    updateLevelUi();
+}
+
+function spawnMovingBlock() {
+    const top = stack[stack.length - 1];
+    const hue = (towerHeight * 12) % 360;
+    movingBlock = {
+        x: 0,
+        w: top.w,
+        dir: Math.random() < 0.5 ? 1 : -1,
+        hue: hue,
+    };
+    // start at edge depending on direction
+    movingBlock.x = movingBlock.dir > 0 ? -movingBlock.w : W;
+}
+
+function updateLevelUi() {
+    const goal = nextLevelGoal(currentLevel);
+    levelEl.textContent = goal !== null
+        ? `${currentLevel.num} (${score}/${goal})`
+        : `${currentLevel.num} 🔥`;
+}
+
+// ================== Sound ==================
+let audioCtx = null;
+let muted = false;
+function ensureAudio() {
+    if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+}
+function tone(freq, duration, type, vol, delay) {
+    if (muted) return;
+    const c = ensureAudio();
+    if (!c) return;
+    const t0 = c.currentTime + (delay || 0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol == null ? 0.1 : vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + duration);
+}
+function playDrop(pitch) {
+    tone(pitch, 0.09, 'square',  0.14, 0);
+    tone(pitch * 0.5, 0.12, 'sine', 0.08, 0.02);
+}
+function playPerfect(comboLevel) {
+    const base = 880 + comboLevel * 90;
+    tone(base,       0.10, 'triangle', 0.16, 0);
+    tone(base * 1.5, 0.14, 'triangle', 0.16, 0.06);
+    tone(base * 2,   0.20, 'sine',     0.14, 0.14);
+}
+function playCut() {
+    tone(180, 0.10, 'sawtooth', 0.07, 0);
+    tone(120, 0.14, 'sawtooth', 0.06, 0.06);
+}
+function playStart() {
+    tone(523, 0.10, 'triangle', 0.18, 0);
+    tone(659, 0.10, 'triangle', 0.18, 0.10);
+    tone(784, 0.16, 'triangle', 0.18, 0.20);
+}
+function playGameOver() {
+    tone(392, 0.18, 'sawtooth', 0.16, 0);
+    tone(294, 0.22, 'sawtooth', 0.16, 0.18);
+    tone(196, 0.35, 'sawtooth', 0.16, 0.38);
+    tone(130, 0.45, 'sawtooth', 0.16, 0.6);
+}
+function playLevelUp() {
+    tone(523, 0.10, 'square', 0.16, 0);
+    tone(659, 0.10, 'square', 0.16, 0.10);
+    tone(784, 0.10, 'square', 0.16, 0.20);
+    tone(1047,0.22, 'square', 0.18, 0.30);
+}
+const MUSIC_NOTES = [523, 659, 784, 880, 784, 659, 523, 440];
+const BASS_NOTES  = [131, 131, 175, 175, 196, 196, 131, 131];
+const NOTE_MS = 220;
+let musicTimer = null, musicStep = 0;
+function playMusicTick() {
+    if (muted) { musicStep++; return; }
+    const i = musicStep % MUSIC_NOTES.length;
+    tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'triangle', 0.05, 0);
+    if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.05, 0);
+    musicStep++;
+}
+function startMusic() {
+    stopMusic(); musicStep = 0;
+    playMusicTick();
+    musicTimer = setInterval(playMusicTick, NOTE_MS);
+}
+function stopMusic() {
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+}
+
+// ================== Sparkles & popups ==================
+function spawnSparkles(x, y, color, count) {
+    const n = count || 18;
+    for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = 80 + Math.random() * 200;
+        sparkles.push({
+            x: x, y: y,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s - 60,
+            life: 0.5 + Math.random() * 0.4,
+            color: color || '#ffdd57',
+            r: 2 + Math.random() * 3,
+        });
+    }
+}
+function popup(text, x, y, color) {
+    popups.push({ text: text, x: x, y: y, vy: -50, life: 1.1, color: color || '#ffdd57' });
+}
+
+// ================== Drop logic ==================
+function dropBlock() {
+    if (!running) return;
+    if (droppingBlock) return;   // already dropping — wait
+    if (!movingBlock) return;
+
+    const top = stack[stack.length - 1];
+    const mb = movingBlock;
+
+    // Compute overlap in world x
+    const mLeft  = mb.x;
+    const mRight = mb.x + mb.w;
+    const tLeft  = top.x;
+    const tRight = top.x + top.w;
+
+    const overlapLeft  = Math.max(mLeft, tLeft);
+    const overlapRight = Math.min(mRight, tRight);
+    const overlap = overlapRight - overlapLeft;
+
+    if (overlap <= 0) {
+        // MISS — whole block falls off
+        const falling = {
+            x: mb.x, y: top.y - BLOCK_H, w: mb.w, h: BLOCK_H,
+            vy: 60, vx: mb.dir * 80, vr: (Math.random() - 0.5) * 4,
+            rot: 0, hue: mb.hue, life: 2.5,
+        };
+        fallingPieces.push(falling);
+        movingBlock = null;
+        playCut();
+        gameOver();
+        return;
+    }
+
+    // Check perfect
+    const misalign = Math.abs(mb.x - top.x);
+    const perfect = misalign <= PERFECT_TOLERANCE;
+
+    let newX, newW;
+    if (perfect) {
+        // snap perfectly, restore some width (+2 px, capped at original START_W)
+        newX = top.x;
+        newW = Math.min(START_W, mb.w + 2);
+        combo++;
+        const bonus = 5 * Math.pow(2, Math.min(combo - 1, 3));
+        score += 1 + bonus;
+        spawnSparkles(top.x + top.w / 2, top.y - BLOCK_H, '#ffdd57', 30);
+        popup('PERFECT! +' + (1 + bonus), top.x + top.w / 2, top.y - BLOCK_H - 10, '#ffdd57');
+        shake = 8;
+        playPerfect(Math.min(combo, 4));
+        // Yellow flash sparkles at corners
+        spawnSparkles(top.x, top.y - BLOCK_H, '#fff', 10);
+        spawnSparkles(top.x + newW, top.y - BLOCK_H, '#fff', 10);
+    } else {
+        // Cut off the overhang
+        newX = overlapLeft;
+        newW = overlap;
+        combo = 0;
+        score += 1;
+        playCut();
+
+        // Create falling cut-off piece(s)
+        if (mLeft < tLeft) {
+            // left overhang
+            const cutW = tLeft - mLeft;
+            fallingPieces.push({
+                x: mLeft, y: top.y - BLOCK_H, w: cutW, h: BLOCK_H,
+                vy: 30, vx: -60, vr: -2.5, rot: 0, hue: mb.hue, life: 1.6,
+            });
+        }
+        if (mRight > tRight) {
+            const cutW = mRight - tRight;
+            fallingPieces.push({
+                x: tRight, y: top.y - BLOCK_H, w: cutW, h: BLOCK_H,
+                vy: 30, vx: 60, vr: 2.5, rot: 0, hue: mb.hue, life: 1.6,
+            });
+        }
+    }
+
+    // Start dropping animation onto top
+    droppingBlock = {
+        x: newX, w: newW, hue: mb.hue,
+        y: mb.y || (top.y - BLOCK_H * 4),   // start slightly above
+        targetY: top.y - BLOCK_H,
+        vy: 0,
+    };
+    // start drop a bit above top for nice animation
+    droppingBlock.y = top.y - BLOCK_H * 4;
+
+    movingBlock = null;
+    scoreEl.textContent = score;
+
+    // Drop click pitch rises with tower height
+    playDrop(nextBlockPitch);
+    nextBlockPitch = Math.min(880, nextBlockPitch + 10);
+
+    // Level check
+    const lvl = getLevelFor(score);
+    if (lvl.num !== currentLevel.num) {
+        currentLevel = lvl;
+        levelBanner = { text: lvl.name, life: 2.2 };
+        playLevelUp();
+    }
+    updateLevelUi();
+}
+
+// ================== Input ==================
+canvas.addEventListener('mousedown', function () {
+    dropBlock();
+});
+canvas.addEventListener('touchstart', function (e) {
+    e.preventDefault();
+    dropBlock();
+}, { passive: false });
+window.addEventListener('keydown', function (e) {
+    if (!running) return;
+    const k = e.key;
+    if (k === ' ' || k === 'Enter' || k === 'ArrowUp' || k === 'ArrowDown' || k === 'ArrowLeft' || k === 'ArrowRight') {
+        e.preventDefault();
+        dropBlock();
+    }
+});
+
+// ================== Update ==================
+function update(dt) {
+    bgPhase += dt * 0.25;
+
+    // Moving block ping-pong
+    if (movingBlock) {
+        movingBlock.x += movingBlock.dir * currentLevel.speed * dt;
+        // bounce off canvas edges (let block partially exit then bounce)
+        const leftLimit = -movingBlock.w * 0.15;
+        const rightLimit = W - movingBlock.w * 0.85;
+        if (movingBlock.x <= leftLimit && movingBlock.dir < 0) {
+            movingBlock.x = leftLimit; movingBlock.dir = 1;
+        }
+        if (movingBlock.x >= rightLimit && movingBlock.dir > 0) {
+            movingBlock.x = rightLimit; movingBlock.dir = -1;
+        }
+    }
+
+    // Dropping block animation (easing fall)
+    if (droppingBlock) {
+        droppingBlock.vy += 1400 * dt;
+        droppingBlock.y += droppingBlock.vy * dt;
+        if (droppingBlock.y >= droppingBlock.targetY) {
+            droppingBlock.y = droppingBlock.targetY;
+            // Place into stack
+            stack.push({
+                x: droppingBlock.x, w: droppingBlock.w,
+                y: droppingBlock.targetY, hue: droppingBlock.hue,
+            });
+            towerHeight++;
+            heightEl.textContent = towerHeight;
+
+            // Tiny bump shake
+            if (shake < 3) shake = 3;
+            droppingBlock = null;
+
+            // Spawn next moving block (if still running)
+            if (running) spawnMovingBlock();
+
+            // Camera follows: keep top of tower around mid canvas
+            const topY = stack[stack.length - 1].y;
+            const desiredScreenTopY = H * 0.42;
+            targetCameraY = topY - desiredScreenTopY;
+            if (targetCameraY > 0) targetCameraY = 0; // don't scroll if tower small (positive cam = scroll down)
+            // we want negative cameraY to scroll content down (shows higher tower lower)
+            // Actually: drawing applies translate(0, -cameraY). If cameraY < 0, scene moves down (we see higher world).
+            // We want to "scroll up" so player sees more sky as tower grows: cameraY should become negative.
+            targetCameraY = topY - desiredScreenTopY;
+            // if topY < desiredScreenTopY (tower is short), tower is low; don't scroll
+            if (targetCameraY > 0) targetCameraY = 0;
+        }
+    }
+
+    // Smooth camera scroll
+    cameraY += (targetCameraY - cameraY) * Math.min(1, dt * 4);
+
+    // Falling cut-off pieces
+    fallingPieces = fallingPieces.filter(function (p) {
+        p.vy += 1200 * dt;
+        p.y += p.vy * dt;
+        p.x += p.vx * dt;
+        p.rot += p.vr * dt;
+        p.life -= dt;
+        return p.life > 0 && p.y < 2000;
+    });
+
+    // Sparkles
+    sparkles = sparkles.filter(function (s) {
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vy += 500 * dt;
+        s.life -= dt;
+        return s.life > 0;
+    });
+
+    // Popups
+    popups = popups.filter(function (p) {
+        p.y += p.vy * dt;
+        p.vy *= 0.96;
+        p.life -= dt;
+        return p.life > 0;
+    });
+
+    // Shake decay
+    if (shake > 0) shake = Math.max(0, shake - dt * 30);
+
+    // Level banner
+    if (levelBanner) {
+        levelBanner.life -= dt;
+        if (levelBanner.life <= 0) levelBanner = null;
+    }
+
+    // BG stars twinkle
+    for (const s of stars) s.tw += dt * 2;
+}
+
+// ================== Render ==================
+function drawBg() {
+    // Deep cosmic gradient: sky → space → cosmos depending on towerHeight & level
+    const heightFactor = Math.min(1, towerHeight / 80);
+    const levelFactor = (currentLevel.num - 1) / 6;
+    const blend = Math.min(1, heightFactor + levelFactor * 0.3);
+
+    // top color (deep blue → purple → black-violet)
+    const topR = 10 + (30 - 10) * blend;
+    const topG = 14 + (10 - 14) * blend;
+    const topB = 42 + (60 - 42) * blend;
+    // bottom color (lighter blue → deep purple)
+    const botR = 45 + (90 - 45) * blend;
+    const botG = 27 + (20 - 27) * blend;
+    const botB = 105 + (140 - 105) * blend;
+
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, `rgb(${topR|0}, ${topG|0}, ${topB|0})`);
+    g.addColorStop(1, `rgb(${botR|0}, ${botG|0}, ${botB|0})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars (parallax — slight cameraY influence)
+    for (const s of stars) {
+        const tw = 0.5 + 0.5 * Math.sin(s.tw);
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.3 + tw * 0.55})`;
+        const py = (s.y + cameraY * 0.15) % H;
+        const yy = py < 0 ? py + H : py;
+        ctx.beginPath();
+        ctx.arc(s.x, yy, s.r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Soft floating nebula circles
+    const t = bgPhase * 30;
+    for (let i = 0; i < 4; i++) {
+        const cx = (W * 0.5) + Math.cos(t * 0.01 + i) * 240;
+        const cy = (H * 0.5) + Math.sin(t * 0.013 + i * 1.7) * 240;
+        const r = 110 + Math.sin(t * 0.02 + i) * 40;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        const hue = (bgPhase * 40 + i * 90) % 360;
+        grad.addColorStop(0, `hsla(${hue|0}, 70%, 60%, 0.18)`);
+        grad.addColorStop(1, 'hsla(0, 0%, 0%, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+function drawBlock(x, y, w, h, hue, rot) {
+    ctx.save();
+    if (rot) {
+        ctx.translate(x + w / 2, y + h / 2);
+        ctx.rotate(rot);
+        ctx.translate(-(x + w / 2), -(y + h / 2));
+    }
+    // Front face
+    ctx.fillStyle = `hsl(${hue|0}, 75%, 55%)`;
+    ctx.fillRect(x, y, w, h);
+    // Top highlight strip
+    ctx.fillStyle = `hsl(${hue|0}, 85%, 72%)`;
+    ctx.fillRect(x, y, w, Math.max(3, h * 0.18));
+    // Bottom shadow strip
+    ctx.fillStyle = `hsla(${hue|0}, 60%, 25%, 0.6)`;
+    ctx.fillRect(x, y + h - Math.max(3, h * 0.18), w, Math.max(3, h * 0.18));
+    // Left edge light
+    ctx.fillStyle = `hsla(${hue|0}, 90%, 80%, 0.55)`;
+    ctx.fillRect(x, y, 3, h);
+    // Right edge shadow
+    ctx.fillStyle = `hsla(${hue|0}, 40%, 18%, 0.6)`;
+    ctx.fillRect(x + w - 3, y, 3, h);
+    // Outline
+    ctx.strokeStyle = `hsla(${hue|0}, 60%, 22%, 0.8)`;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.restore();
+}
+
+function drawSparkles() {
+    for (const s of sparkles) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, s.life * 2));
+        ctx.fillStyle = s.color;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawPopups() {
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 28px Comic Sans MS, Arial';
+    for (const p of popups) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+        ctx.lineWidth = 5;
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawLevelBanner() {
+    if (!levelBanner) return;
+    const a = Math.min(1, levelBanner.life / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 36px Comic Sans MS, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = levelBanner.text;
+    const padX = 22, padY = 12;
+    const m = ctx.measureText(text);
+    const bw = m.width + padX * 2;
+    const bh = 36 + padY * 2;
+    const bx = W / 2 - bw / 2;
+    const by = H / 2 - bh / 2;
+    ctx.fillStyle = 'rgba(10,14,42,0.88)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+    else                  ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = currentLevel.color;
+    ctx.lineWidth = 4;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+    else                  ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = currentLevel.color;
+    ctx.shadowBlur = 18; ctx.shadowColor = currentLevel.color;
+    ctx.fillText(text, W / 2, H / 2);
+    ctx.shadowBlur = 0;
+    ctx.textBaseline = 'alphabetic';
+    ctx.globalAlpha = 1;
+}
+
+function drawComboBadge() {
+    if (combo < 2) return;
+    ctx.save();
+    ctx.font = 'bold 22px Comic Sans MS, Arial';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffdd57';
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = 4;
+    const text = '🔥 ' + combo + ' פרפקט!';
+    ctx.strokeText(text, W - 14, 36);
+    ctx.fillText(text, W - 14, 36);
+    ctx.restore();
+}
+
+function render() {
+    drawBg();
+
+    // Apply shake + camera
+    ctx.save();
+    const sx = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+    const sy = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+    ctx.translate(sx, sy - cameraY);
+
+    // Stack
+    for (const b of stack) {
+        drawBlock(b.x, b.y, b.w, BLOCK_H, b.hue);
+    }
+
+    // Moving block (slides above current top)
+    if (movingBlock) {
+        const top = stack[stack.length - 1];
+        const my = top.y - BLOCK_H - 6;
+        movingBlock.y = my;
+        drawBlock(movingBlock.x, my, movingBlock.w, BLOCK_H, movingBlock.hue);
+    }
+
+    // Dropping block
+    if (droppingBlock) {
+        drawBlock(droppingBlock.x, droppingBlock.y, droppingBlock.w, BLOCK_H, droppingBlock.hue);
+    }
+
+    // Falling cut-off pieces
+    for (const p of fallingPieces) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 1.6));
+        drawBlock(p.x, p.y, p.w, p.h, p.hue, p.rot);
+    }
+    ctx.globalAlpha = 1;
+
+    // Sparkles & popups (in world space)
+    drawSparkles();
+    drawPopups();
+
+    ctx.restore();
+
+    // Banner & combo in screen space
+    drawLevelBanner();
+    drawComboBadge();
+}
+
+// ================== Loop ==================
+function loop(t) {
+    if (!running) return;
+    const dt = Math.min((t - lastT) / 1000, 0.05);
+    lastT = t;
+    update(dt);
+    render();
+    if (running) rafId = requestAnimationFrame(loop);
+}
+
+// ================== Menus ==================
+function pickPlayer(name) {
+    const clean = (name || '').trim().slice(0, 20);
+    if (!clean) return;
+    currentPlayer = clean;
+    currentPlayerEl.textContent = currentPlayer;
+    start();
+}
+
+function showPlayerSelect() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    currentPlayer = null;
+    currentPlayerEl.textContent = '—';
+    scoreEl.textContent = '0';
+    heightEl.textContent = '0';
+    levelEl.textContent = '—';
+
+    const recent = Object.entries(loadScores())
+        .map(([name, v]) => ({ name: name, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.lastPlayed - a.lastPlayed)
+        .slice(0, 6);
+    const recentHtml = recent.length === 0 ? '' :
+        '<p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>' +
+        '<div class="recent-grid">' +
+            recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('') +
+        '</div>';
+
+    overlay.innerHTML =
+        '<h2>🏗️ מגדל בלוקים</h2>' +
+        '<p>מה השם שלך?</p>' +
+        '<form class="name-form" id="name-form" autocomplete="off">' +
+            '<input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />' +
+            '<button type="submit" class="primary-btn">🏗️ בנה מגדל</button>' +
+        '</form>' +
+        recentHtml +
+        leaderboardHtml(null);
+    overlay.style.display = 'flex';
+
+    const form  = document.getElementById('name-form');
+    const input = document.getElementById('name-input');
+    form.addEventListener('submit', function (e) { e.preventDefault(); pickPlayer(input.value); });
+    overlay.querySelectorAll('.player-btn').forEach(btn => {
+        btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+    });
+
+    // Render bg behind overlay
+    drawBg();
+
+    if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+        setTimeout(() => input.focus(), 50);
+    }
+}
+
+function showGameOver() {
+    const scores = loadScores();
+    const myBest = (scores[currentPlayer] && scores[currentPlayer].best) || 0;
+    const isNewRecord = score === myBest && score > 0;
+    const sorted = allPlayersSorted();
+    const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+    const lvlReached = getLevelFor(score);
+
+    let headline, msg;
+    if (isKing && isNewRecord) {
+        headline = '👑 מלך המגדל!';
+        msg = `${currentPlayer} בנה מגדל של ${towerHeight} קומות וצבר ${score} נקודות (${lvlReached.name})! 🌟`;
+    } else if (isNewRecord) {
+        headline = '🎉 שיא אישי חדש!';
+        msg = `${currentPlayer} בנה מגדל של ${towerHeight} קומות וצבר ${score} נקודות (${lvlReached.name})!`;
+    } else if (score >= 15) {
+        headline = '🏗️ בנייה יפה!';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}). השיא: ${myBest}`;
+    } else {
+        headline = '🏗️ תוכל לעשות יותר!';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+    }
+
+    overlay.innerHTML =
+        `<h2>${headline}</h2>` +
+        `<p>${msg}</p>` +
+        leaderboardHtml(currentPlayer) +
+        '<div class="end-buttons">' +
+            '<button id="btn-again"  class="primary-btn">🔄 שחק שוב</button>' +
+            '<button id="btn-change" class="secondary-btn">👥 שחקן אחר</button>' +
+        '</div>';
+    overlay.style.display = 'flex';
+
+    document.getElementById('btn-again').addEventListener('click', start);
+    document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+}
+
+function gameOver() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    playGameOver();
+    saveResult(currentPlayer, score);
+    // Pan camera down briefly to show whole tower before overlay
+    setTimeout(showGameOver, 700);
+}
+
+function start() {
+    if (!currentPlayer) { showPlayerSelect(); return; }
+    overlay.style.display = 'none';
+    ensureAudio();
+    playStart();
+    resetGame();
+    running = true;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(loop);
+    setTimeout(startMusic, 450);
+}
+
+// ================== Mute ==================
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', function () {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+});
+
+// ================== Boot ==================
+drawBg();
+showPlayerSelect();
+</script>
+</body>
+</html>

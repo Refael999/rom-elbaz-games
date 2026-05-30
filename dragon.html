@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>דרקון אש 🐉</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+        body {
+            background: linear-gradient(135deg, #2a0a3a, #6b1d3a, #ff7733, #ffcc44);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            color: white;
+            padding: 6px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3.3vw, 1.6em);
+            margin: 4px 0;
+            color: white;
+            text-shadow: 0 2px 0 #8a1a1a, 0 0 16px rgba(255,150,50,0.8);
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .status-pill {
+            font-size: clamp(0.8em, 1.9vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid #ff7733;
+            border-radius: 25px;
+            color: #4a1a0a;
+            font-weight: bold;
+        }
+        #score   { color: #d22e1a; }
+        #lives   { color: #c92a52; }
+        #level   { color: #ff8a00; }
+        #current-player { color: #6a1b9a; }
+
+        #game-wrap {
+            position: relative;
+            width:  min(96vw, calc(100vh - 160px));
+            height: min(96vw, calc(100vh - 160px));
+            max-width: 96vw;
+            max-height: calc(100vh - 160px);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 5px solid #ff7733;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(255,120,40,0.6);
+            background: #2a0a3a;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            background: rgba(30,5,20,0.92);
+            border-radius: 14px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+        #overlay h2 {
+            font-size: clamp(1.1em, 3.8vw, 1.9em);
+            color: #ffcc44;
+            text-shadow: 0 0 14px #ff7733;
+            margin-bottom: 6px;
+        }
+        #overlay p {
+            font-size: clamp(0.85em, 2.2vw, 1.05em);
+            color: #ffe2c5;
+            margin-bottom: 8px;
+        }
+
+        .name-form { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .name-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: clamp(1em, 2.4vw, 1.1em);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            border: 3px solid #ff7733;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
+            color: #4a1a0a;
+            text-align: center;
+            outline: none;
+            font-weight: bold;
+        }
+        .name-input::placeholder { color: rgba(74,26,10,0.5); }
+        .name-input:focus { border-color: #ffcc44; }
+
+        .recent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; width: 100%; max-width: 360px; margin-bottom: 8px; }
+        .player-btn {
+            background: linear-gradient(135deg, #ff3322, #ffaa22);
+            color: white;
+            border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.85em, 2.2vw, 1em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255,80,20,0.45);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .player-btn:active { transform: scale(1.08); }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #ffcc44, #ff7733);
+            color: #3a0a0a;
+            border: none;
+            padding: 10px 26px;
+            font-size: clamp(0.95em, 2.3vw, 1.1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 18px rgba(255,180,40,0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 24px;
+            font-size: clamp(0.9em, 2.1vw, 1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,120,40,0.55);
+            border-radius: 10px;
+            padding: 6px 12px;
+            margin: 4px 0 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .leaderboard-title { color: #ffcc44; font-size: 0.95em; margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: 0.9em; }
+        .leaderboard td { padding: 3px 5px; color: #ffe2c5; }
+        .leaderboard tr.highlight td { background: rgba(255,204,68,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #ffcc44; font-weight: bold; width: 50px; }
+
+        #mute {
+            position: fixed;
+            top: 10px; left: 10px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid #ff7733;
+            color: #4a1a0a;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: #ffcc44; }
+
+        #hint {
+            margin-top: 5px;
+            color: white;
+            text-shadow: 0 1px 0 #6a1a1a;
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            text-align: center;
+            padding: 0 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק">🔊</button>
+
+<h1>🐉 דרקון אש! 🔥</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">❤️ <span id="lives">3</span></div>
+    <div class="status-pill">⚡ <span id="score">0</span></div>
+    <div class="status-pill">🎯 <span id="level">1</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<p id="hint">⬆️⬇️ זוז · רווח/קליק לאש 🔥</p>
+
+<script>
+'use strict';
+
+// ================== Setup ==================
+const canvas  = document.getElementById('c');
+const ctx     = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl  = document.getElementById('score');
+const livesEl  = document.getElementById('lives');
+const levelEl  = document.getElementById('level');
+const currentPlayerEl = document.getElementById('current-player');
+
+const W = canvas.width;     // 700
+const H = canvas.height;    // 700
+const DRAGON_W = 90;
+const DRAGON_H = 60;
+const DRAGON_X = W * 0.22;
+
+// ================== Levels ==================
+const LEVELS = [
+    { num: 1, name: 'שלב 1 · קל',          minScore: 0,   enemySpeed: 130, spawnMs: 1400, projChance: 0.15, color: '#ffcc66', sky: ['#7ec8ff', '#ffd58a'] },
+    { num: 2, name: 'שלב 2 · קל-בינוני',   minScore: 20,  enemySpeed: 160, spawnMs: 1200, projChance: 0.22, color: '#ffb347', sky: ['#6ab2ff', '#ffb070'] },
+    { num: 3, name: 'שלב 3 · בינוני',      minScore: 50,  enemySpeed: 190, spawnMs: 1050, projChance: 0.30, color: '#ff9933', sky: ['#ff8a55', '#ff5544'] },
+    { num: 4, name: 'שלב 4 · די קשה',      minScore: 90,  enemySpeed: 220, spawnMs: 900,  projChance: 0.38, color: '#ff7733', sky: ['#a85bcc', '#ff5577'] },
+    { num: 5, name: 'שלב 5 · קשה',         minScore: 140, enemySpeed: 250, spawnMs: 780,  projChance: 0.46, color: '#ff5544', sky: ['#3a1a6a', '#7a2a8a'] },
+    { num: 6, name: 'שלב 6 · קשה מאוד',    minScore: 200, enemySpeed: 285, spawnMs: 660,  projChance: 0.55, color: '#ff3322', sky: ['#1a0a4a', '#5a1a6a'] },
+    { num: 7, name: 'שלב 7 · בטירוף 🔥',   minScore: 280, enemySpeed: 320, spawnMs: 540,  projChance: 0.65, color: '#c92a22', sky: ['#0a0a3a', '#aa3322'] },
+];
+function getLevelFor(score) {
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (score >= LEVELS[i].minScore) return LEVELS[i];
+    }
+    return LEVELS[0];
+}
+function nextLevelGoal(level) {
+    const next = LEVELS.find(l => l.num === level.num + 1);
+    return next ? next.minScore : null;
+}
+
+// ================== Scoreboard ==================
+const STORAGE_KEY = 'rom_dragon_scores_v1';
+let currentPlayer = null;
+
+function loadScores() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+}
+function saveResult(player, finalScore) {
+    const scores = loadScores();
+    const e = scores[player] || { best: 0, games: 0, last: 0 };
+    if (finalScore > e.best) e.best = finalScore;
+    e.games = (e.games || 0) + 1;
+    e.last  = finalScore;
+    e.lastPlayed = Date.now();
+    scores[player] = e;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+}
+function allPlayersSorted() {
+    return Object.entries(loadScores())
+        .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+}
+function leaderboardHtml(highlight) {
+    const entries = allPlayersSorted().slice(0, 8);
+    if (entries.length === 0) {
+        return '<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><p style="color:#aaa;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! 🐉</p></div>';
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = entries.map((e, i) => {
+        const rank = i < 3 ? medals[i] : `${i + 1}.`;
+        const clsAttr = e.name === highlight ? ' class="highlight"' : '';
+        return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+    }).join('');
+    return `<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><table>${rows}</table></div>`;
+}
+
+// ================== Game state ==================
+let running = false;
+let rafId = null;
+let enemies = [];
+let fireballs = [];
+let enemyProjectiles = [];
+let coins = [];
+let particles = [];
+let popups = [];
+let trail = [];
+let clouds = [];
+let mountains = [];
+let bgPhase = 0;
+let score = 0;
+let lives = 3;
+let lastSpawn = 0;
+let lastCoinSpawn = 0;
+let lastT = 0;
+let lastShot = 0;
+let invincibleUntil = 0;
+let damageFlash = 0;
+let currentLevel = LEVELS[0];
+let levelBanner = null;
+let dragon = { x: DRAGON_X, y: H / 2, targetY: H / 2, wingPhase: 0 };
+
+function resetGame() {
+    enemies = [];
+    fireballs = [];
+    enemyProjectiles = [];
+    coins = [];
+    particles = [];
+    popups = [];
+    trail = [];
+    score = 0;
+    lives = 3;
+    bgPhase = 0;
+    invincibleUntil = 0;
+    damageFlash = 0;
+    lastShot = 0;
+    currentLevel = LEVELS[0];
+    levelBanner = { text: '🐉 ' + currentLevel.name, life: 1.8 };
+    lastSpawn = performance.now() - 800;
+    lastCoinSpawn = performance.now();
+    dragon.x = DRAGON_X;
+    dragon.y = H / 2;
+    dragon.targetY = H / 2;
+    dragon.wingPhase = 0;
+    // Init parallax layers
+    clouds = [];
+    for (let i = 0; i < 6; i++) {
+        clouds.push({ x: Math.random() * W, y: 80 + Math.random() * (H * 0.45), r: 30 + Math.random() * 40, speed: 30 + Math.random() * 25 });
+    }
+    mountains = [];
+    for (let i = 0; i < 7; i++) {
+        mountains.push({ x: i * 130 + Math.random() * 30, h: 130 + Math.random() * 100 });
+    }
+    scoreEl.textContent = '0';
+    livesEl.textContent = '3';
+    updateLevelUi();
+}
+
+function updateLevelUi() {
+    const goal = nextLevelGoal(currentLevel);
+    levelEl.textContent = goal !== null
+        ? `${currentLevel.num} (${score}/${goal})`
+        : `${currentLevel.num} 🔥`;
+}
+
+// ================== Sound ==================
+let audioCtx = null;
+let muted = false;
+function ensureAudio() {
+    if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+}
+function tone(freq, duration, type, vol, delay) {
+    if (muted) return;
+    const c = ensureAudio();
+    if (!c) return;
+    const t0 = c.currentTime + (delay || 0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol == null ? 0.1 : vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + duration);
+}
+function playFire() {
+    tone(1200, 0.05, 'square',  0.10, 0);
+    tone(900,  0.06, 'triangle',0.10, 0.03);
+}
+function playHit() {
+    tone(420, 0.08, 'square',   0.14, 0);
+    tone(260, 0.10, 'sawtooth', 0.12, 0.05);
+}
+function playCoin() {
+    tone(880,  0.06, 'triangle', 0.14, 0);
+    tone(1320, 0.10, 'triangle', 0.14, 0.05);
+}
+function playHurt() {
+    tone(180, 0.20, 'sawtooth', 0.18, 0);
+    tone(120, 0.30, 'sawtooth', 0.18, 0.15);
+}
+function playStart() {
+    tone(392, 0.10, 'triangle', 0.18, 0);
+    tone(523, 0.10, 'triangle', 0.18, 0.10);
+    tone(659, 0.16, 'triangle', 0.18, 0.20);
+}
+function playGameOver() {
+    tone(392, 0.18, 'sawtooth', 0.16, 0);
+    tone(294, 0.18, 'sawtooth', 0.16, 0.18);
+    tone(196, 0.35, 'sawtooth', 0.16, 0.36);
+}
+function playLevelUp() {
+    tone(523, 0.10, 'square', 0.16, 0);
+    tone(659, 0.10, 'square', 0.16, 0.10);
+    tone(784, 0.10, 'square', 0.16, 0.20);
+    tone(1047,0.22, 'square', 0.18, 0.30);
+}
+const MUSIC_NOTES = [392, 466, 587, 698, 587, 466, 392, 349];
+const BASS_NOTES  = [98,  98,  117, 117, 131, 131, 98,  98];
+const NOTE_MS = 220;
+let musicTimer = null, musicStep = 0;
+function playMusicTick() {
+    if (muted) { musicStep++; return; }
+    const i = musicStep % MUSIC_NOTES.length;
+    tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'triangle', 0.05, 0);
+    if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.05, 0);
+    musicStep++;
+}
+function startMusic() {
+    stopMusic(); musicStep = 0;
+    playMusicTick();
+    musicTimer = setInterval(playMusicTick, NOTE_MS);
+}
+function stopMusic() {
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+}
+
+// ================== Enemy spawning ==================
+const ENEMY_TYPES = ['castle', 'eagle', 'smalldragon', 'cloud'];
+function spawnEnemy() {
+    const r = Math.random();
+    let type;
+    if (r < 0.20) type = 'castle';
+    else if (r < 0.55) type = 'eagle';
+    else if (r < 0.85) type = 'smalldragon';
+    else type = 'cloud';
+
+    const base = {
+        x: W + 60,
+        startY: 0,
+        y: 0,
+        vx: -currentLevel.enemySpeed,
+        vy: 0,
+        type: type,
+        hp: 1,
+        w: 60, h: 50,
+        score: 1,
+        color: '#aaccff',
+        flash: 0,
+        phase: Math.random() * Math.PI * 2,
+    };
+
+    if (type === 'castle') {
+        base.y = H - 90;
+        base.startY = base.y;
+        base.w = 90; base.h = 110;
+        base.vx = -currentLevel.enemySpeed * 0.55;
+        base.hp = 3;
+        base.score = 5;
+        base.color = '#6a4a2a';
+        base.shootCooldown = 1.0 + Math.random() * 0.8;
+    } else if (type === 'eagle') {
+        base.y = 80 + Math.random() * (H - 260);
+        base.startY = base.y;
+        base.w = 70; base.h = 50;
+        base.vx = -currentLevel.enemySpeed * 1.1;
+        base.hp = 1;
+        base.score = 2;
+        base.color = '#8b5a2b';
+    } else if (type === 'smalldragon') {
+        base.y = 100 + Math.random() * (H - 280);
+        base.startY = base.y;
+        base.w = 72; base.h = 46;
+        base.vx = -currentLevel.enemySpeed;
+        base.hp = 2;
+        base.score = 3;
+        base.color = '#3a8a4a';
+    } else { // cloud
+        base.y = 80 + Math.random() * (H - 260);
+        base.startY = base.y;
+        base.w = 110; base.h = 70;
+        base.vx = -currentLevel.enemySpeed * 0.5;
+        base.hp = 2;
+        base.score = 1;
+        base.color = '#5a5a7a';
+    }
+    enemies.push(base);
+}
+
+function spawnCoin() {
+    const r = Math.random();
+    let type, value, color;
+    if (r < 0.55) { type = 'gold'; value = 1; color = '#ffd33a'; }
+    else if (r < 0.85) { type = 'red'; value = 3; color = '#ff4466'; }
+    else { type = 'blue'; value = 5; color = '#4abaff'; }
+    coins.push({
+        x: W + 30,
+        y: 90 + Math.random() * (H - 260),
+        vx: -130,
+        r: 16,
+        type: type,
+        value: value,
+        color: color,
+        phase: Math.random() * Math.PI * 2,
+    });
+}
+
+function spawnParticles(x, y, color, count) {
+    count = count || 14;
+    for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = 80 + Math.random() * 180;
+        particles.push({
+            x: x, y: y,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s,
+            life: 0.35 + Math.random() * 0.4,
+            color: color,
+            r: 2 + Math.random() * 4,
+        });
+    }
+}
+function popup(text, x, y, color) {
+    popups.push({ text: text, x: x, y: y, vy: -50, life: 0.9, color: color || '#ffcc44' });
+}
+
+// ================== Shooting ==================
+function shootFire() {
+    if (!running) return;
+    const now = performance.now();
+    if (now - lastShot < 200) return;
+    lastShot = now;
+    fireballs.push({
+        x: dragon.x + DRAGON_W * 0.5,
+        y: dragon.y,
+        vx: 620,
+        r: 11,
+        life: 1.6,
+    });
+    playFire();
+}
+
+function enemyShoot(e) {
+    enemyProjectiles.push({
+        x: e.x - 10,
+        y: e.y - e.h * 0.3,
+        vx: -260,
+        vy: 0,
+        r: 7,
+        life: 2.2,
+        color: '#3a2010',
+    });
+}
+
+// ================== Input ==================
+function canvasPointFromClient(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: (clientX - rect.left) * (W / rect.width),
+        y: (clientY - rect.top)  * (H / rect.height),
+    };
+}
+
+let keys = { up: false, down: false };
+let touchActive = false;
+let touchStartTime = 0;
+let touchMoved = false;
+
+document.addEventListener('keydown', function (e) {
+    if (e.code === 'ArrowUp')   { keys.up = true; e.preventDefault(); }
+    if (e.code === 'ArrowDown') { keys.down = true; e.preventDefault(); }
+    if (e.code === 'Space')     { shootFire(); e.preventDefault(); }
+});
+document.addEventListener('keyup', function (e) {
+    if (e.code === 'ArrowUp')   keys.up = false;
+    if (e.code === 'ArrowDown') keys.down = false;
+});
+
+canvas.addEventListener('mousedown', function (e) {
+    const p = canvasPointFromClient(e.clientX, e.clientY);
+    dragon.targetY = p.y;
+    shootFire();
+});
+canvas.addEventListener('mousemove', function (e) {
+    if (!running) return;
+    const p = canvasPointFromClient(e.clientX, e.clientY);
+    dragon.targetY = p.y;
+});
+
+canvas.addEventListener('touchstart', function (e) {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    const p = canvasPointFromClient(t.clientX, t.clientY);
+    dragon.targetY = p.y;
+    touchActive = true;
+    touchStartTime = performance.now();
+    touchMoved = false;
+}, { passive: false });
+canvas.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    const p = canvasPointFromClient(t.clientX, t.clientY);
+    dragon.targetY = p.y;
+    touchMoved = true;
+}, { passive: false });
+canvas.addEventListener('touchend', function (e) {
+    e.preventDefault();
+    // Tap (short, no move) = shoot
+    const dur = performance.now() - touchStartTime;
+    if (!touchMoved && dur < 250) shootFire();
+    touchActive = false;
+}, { passive: false });
+
+// ================== Collisions ==================
+function rectCircleHit(rx, ry, rw, rh, cx, cy, cr) {
+    const closestX = Math.max(rx - rw / 2, Math.min(cx, rx + rw / 2));
+    const closestY = Math.max(ry - rh / 2, Math.min(cy, ry + rh / 2));
+    const dx = cx - closestX, dy = cy - closestY;
+    return dx * dx + dy * dy < cr * cr;
+}
+
+function damageDragon() {
+    const now = performance.now();
+    if (now < invincibleUntil) return;
+    lives--;
+    livesEl.textContent = lives;
+    invincibleUntil = now + 1400;
+    damageFlash = 0.6;
+    playHurt();
+    spawnParticles(dragon.x, dragon.y, '#ff3333', 18);
+    if (lives <= 0) { gameOver(); }
+}
+
+// ================== Update ==================
+function update(dt) {
+    bgPhase += dt * 0.35;
+    dragon.wingPhase += dt * 14;
+
+    // Dragon movement
+    const speed = 380;
+    if (keys.up)   dragon.targetY -= speed * dt;
+    if (keys.down) dragon.targetY += speed * dt;
+    dragon.targetY = Math.max(50, Math.min(H - 50, dragon.targetY));
+    // Smooth follow
+    dragon.y += (dragon.targetY - dragon.y) * Math.min(1, dt * 8);
+
+    // Trail
+    trail.push({ x: dragon.x - 20, y: dragon.y + 4, life: 0.5 });
+    if (trail.length > 30) trail.shift();
+    trail = trail.filter(t => { t.life -= dt; return t.life > 0; });
+
+    // Parallax clouds
+    for (const c of clouds) {
+        c.x -= c.speed * dt;
+        if (c.x < -c.r * 2) { c.x = W + c.r; c.y = 80 + Math.random() * (H * 0.45); }
+    }
+    // Parallax mountains
+    for (const m of mountains) {
+        m.x -= 20 * dt;
+        if (m.x < -150) { m.x = W + 50; m.h = 130 + Math.random() * 100; }
+    }
+
+    // Spawn enemies
+    if (performance.now() - lastSpawn > currentLevel.spawnMs) {
+        spawnEnemy();
+        lastSpawn = performance.now();
+    }
+    // Spawn coins
+    if (performance.now() - lastCoinSpawn > 1300) {
+        spawnCoin();
+        lastCoinSpawn = performance.now();
+    }
+
+    // Update enemies
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.x += e.vx * dt;
+        if (e.type === 'smalldragon') {
+            e.y = e.startY + Math.sin((e.x * 0.012) + e.phase) * 60;
+        } else if (e.type === 'eagle') {
+            e.y = e.startY + Math.sin((e.x * 0.008) + e.phase) * 18;
+        } else if (e.type === 'cloud') {
+            e.y = e.startY + Math.sin((e.x * 0.005) + e.phase) * 25;
+        }
+        if (e.flash > 0) e.flash -= dt;
+        if (e.type === 'castle') {
+            e.shootCooldown -= dt;
+            if (e.shootCooldown <= 0 && Math.random() < currentLevel.projChance) {
+                enemyShoot(e);
+                e.shootCooldown = 1.2 + Math.random() * 1.2;
+            } else if (e.shootCooldown <= 0) {
+                e.shootCooldown = 0.6 + Math.random() * 0.6;
+            }
+        }
+        if (e.x + e.w < -40) { enemies.splice(i, 1); continue; }
+
+        // Hit player?
+        if (rectCircleHit(e.x, e.y, e.w * 0.8, e.h * 0.8, dragon.x, dragon.y, 28)) {
+            damageDragon();
+            spawnParticles(e.x, e.y, '#ff8833', 10);
+            if (e.type !== 'castle') enemies.splice(i, 1);
+        }
+    }
+
+    // Update fireballs
+    for (let i = fireballs.length - 1; i >= 0; i--) {
+        const f = fireballs[i];
+        f.x += f.vx * dt;
+        f.life -= dt;
+        if (f.x > W + 20 || f.life <= 0) { fireballs.splice(i, 1); continue; }
+        // Hit enemy?
+        for (let j = enemies.length - 1; j >= 0; j--) {
+            const e = enemies[j];
+            if (rectCircleHit(e.x, e.y, e.w * 0.85, e.h * 0.85, f.x, f.y, f.r)) {
+                fireballs.splice(i, 1);
+                e.hp--;
+                e.flash = 0.18;
+                spawnParticles(f.x, f.y, '#ffaa33', 6);
+                playHit();
+                if (e.hp <= 0) {
+                    score += e.score;
+                    scoreEl.textContent = score;
+                    popup('+' + e.score, e.x, e.y - e.h * 0.5, '#ffcc44');
+                    spawnParticles(e.x, e.y, e.color, 16);
+                    spawnParticles(e.x, e.y, '#ff6622', 10);
+                    enemies.splice(j, 1);
+                    // Level check
+                    const lvl = getLevelFor(score);
+                    if (lvl.num !== currentLevel.num) {
+                        currentLevel = lvl;
+                        levelBanner = { text: lvl.name, life: 2.2 };
+                        playLevelUp();
+                    }
+                    updateLevelUi();
+                }
+                break;
+            }
+        }
+    }
+
+    // Update enemy projectiles
+    for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+        const p = enemyProjectiles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.x < -20 || p.life <= 0) { enemyProjectiles.splice(i, 1); continue; }
+        // Hit player?
+        const dx = p.x - dragon.x, dy = p.y - dragon.y;
+        if (dx * dx + dy * dy < (28 + p.r) * (28 + p.r)) {
+            enemyProjectiles.splice(i, 1);
+            damageDragon();
+        }
+    }
+
+    // Update coins
+    for (let i = coins.length - 1; i >= 0; i--) {
+        const c = coins[i];
+        c.x += c.vx * dt;
+        c.phase += dt * 5;
+        if (c.x < -30) { coins.splice(i, 1); continue; }
+        const dx = c.x - dragon.x, dy = c.y - dragon.y;
+        if (dx * dx + dy * dy < (28 + c.r) * (28 + c.r)) {
+            coins.splice(i, 1);
+            score += c.value;
+            scoreEl.textContent = score;
+            popup('+' + c.value, c.x, c.y - 20, c.color);
+            spawnParticles(c.x, c.y, c.color, 10);
+            playCoin();
+            const lvl = getLevelFor(score);
+            if (lvl.num !== currentLevel.num) {
+                currentLevel = lvl;
+                levelBanner = { text: lvl.name, life: 2.2 };
+                playLevelUp();
+            }
+            updateLevelUi();
+        }
+    }
+
+    // Particles
+    particles = particles.filter(function (s) {
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vy += 300 * dt;
+        s.life -= dt;
+        return s.life > 0;
+    });
+
+    // Popups
+    popups = popups.filter(function (p) {
+        p.y += p.vy * dt;
+        p.life -= dt;
+        return p.life > 0;
+    });
+
+    // Damage flash decay
+    if (damageFlash > 0) damageFlash -= dt;
+
+    // Level banner
+    if (levelBanner) {
+        levelBanner.life -= dt;
+        if (levelBanner.life <= 0) levelBanner = null;
+    }
+}
+
+// ================== Render ==================
+function drawBg() {
+    // Sky gradient interpolating between levels using bgPhase for subtle shift
+    const sky = currentLevel.sky;
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, sky[0]);
+    g.addColorStop(1, sky[1]);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Sun/moon
+    const sunX = W * 0.78;
+    const sunY = H * 0.22;
+    ctx.fillStyle = currentLevel.num >= 5 ? 'rgba(240,240,255,0.85)' : 'rgba(255,235,170,0.9)';
+    ctx.beginPath(); ctx.arc(sunX, sunY, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = currentLevel.num >= 5 ? 'rgba(240,240,255,0.18)' : 'rgba(255,235,170,0.25)';
+    ctx.beginPath(); ctx.arc(sunX, sunY, 65, 0, Math.PI * 2); ctx.fill();
+
+    // Stars on later levels
+    if (currentLevel.num >= 5) {
+        for (let i = 0; i < 30; i++) {
+            const sx = (i * 79 + bgPhase * 8) % W;
+            const sy = (i * 53) % (H * 0.5);
+            const tw = 0.5 + 0.5 * Math.sin(bgPhase * 3 + i);
+            ctx.fillStyle = `rgba(255,255,255,${0.4 + tw * 0.5})`;
+            ctx.fillRect(sx, sy, 2, 2);
+        }
+    }
+
+    // Distant mountains
+    ctx.fillStyle = currentLevel.num >= 5 ? '#1a0a3a' : '#5a3a6a';
+    for (const m of mountains) {
+        ctx.beginPath();
+        ctx.moveTo(m.x - 100, H - 90);
+        ctx.lineTo(m.x, H - 90 - m.h);
+        ctx.lineTo(m.x + 100, H - 90);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // Ground strip
+    ctx.fillStyle = currentLevel.num >= 5 ? '#1a0518' : '#3a2018';
+    ctx.fillRect(0, H - 90, W, 90);
+    ctx.fillStyle = currentLevel.num >= 5 ? '#2a1028' : '#5a3a28';
+    ctx.fillRect(0, H - 90, W, 14);
+
+    // Clouds
+    for (const c of clouds) {
+        const alpha = currentLevel.num >= 5 ? 0.35 : 0.75;
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(c.x,         c.y,         c.r,        0, Math.PI * 2);
+        ctx.arc(c.x + c.r*0.7, c.y - c.r*0.2, c.r * 0.75, 0, Math.PI * 2);
+        ctx.arc(c.x + c.r*1.3, c.y,         c.r * 0.85, 0, Math.PI * 2);
+        ctx.arc(c.x + c.r*0.6, c.y + c.r*0.2, c.r * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+function drawDragon() {
+    const now = performance.now();
+    const blink = now < invincibleUntil && Math.floor(now / 80) % 2 === 0;
+    if (blink) { return; } // invincibility flash
+    ctx.save();
+    ctx.translate(dragon.x, dragon.y);
+
+    const wingY = Math.sin(dragon.wingPhase) * 14;
+
+    // Tail
+    ctx.fillStyle = '#aa2210';
+    ctx.strokeStyle = '#660a0a';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-DRAGON_W * 0.45, -4);
+    ctx.quadraticCurveTo(-DRAGON_W * 0.85, 10 + Math.sin(dragon.wingPhase * 0.8) * 6, -DRAGON_W * 0.95, -8);
+    ctx.quadraticCurveTo(-DRAGON_W * 0.7, 6, -DRAGON_W * 0.45, 12);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Tail tip spikes
+    ctx.fillStyle = '#ffcc44';
+    ctx.beginPath();
+    ctx.moveTo(-DRAGON_W * 0.95, -8);
+    ctx.lineTo(-DRAGON_W * 1.05, -16);
+    ctx.lineTo(-DRAGON_W * 0.88, -4);
+    ctx.closePath(); ctx.fill();
+
+    // Body
+    const bodyGrad = ctx.createLinearGradient(0, -25, 0, 25);
+    bodyGrad.addColorStop(0, '#ff6633');
+    bodyGrad.addColorStop(1, '#aa1a0a');
+    ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = '#660a0a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, DRAGON_W * 0.42, DRAGON_H * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Belly scales
+    ctx.fillStyle = '#ffcc44';
+    for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.ellipse(i * 8, 12, 5, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Back wing (under body)
+    ctx.fillStyle = '#8a1a0a';
+    ctx.strokeStyle = '#440505';
+    ctx.beginPath();
+    ctx.moveTo(-6, -8);
+    ctx.quadraticCurveTo(-20, -30 - wingY, 10, -38 - wingY);
+    ctx.quadraticCurveTo(18, -20 - wingY * 0.5, 8, -8);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Front wing (over body)
+    ctx.fillStyle = '#cc2a1a';
+    ctx.strokeStyle = '#660a0a';
+    ctx.beginPath();
+    ctx.moveTo(-2, -6);
+    ctx.quadraticCurveTo(-12, -38 + wingY, 22, -46 + wingY);
+    ctx.quadraticCurveTo(28, -22 + wingY * 0.5, 14, -6);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Wing bones
+    ctx.strokeStyle = '#440505';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -6); ctx.lineTo(20, -44 + wingY);
+    ctx.moveTo(5, -6); ctx.lineTo(12, -42 + wingY);
+    ctx.stroke();
+
+    // Head
+    ctx.fillStyle = bodyGrad;
+    ctx.strokeStyle = '#660a0a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(DRAGON_W * 0.38, -6, 22, 18, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Snout
+    ctx.beginPath();
+    ctx.ellipse(DRAGON_W * 0.5, 0, 14, 9, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Horns
+    ctx.fillStyle = '#f0e0a0';
+    ctx.strokeStyle = '#665020';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(DRAGON_W * 0.32, -20);
+    ctx.lineTo(DRAGON_W * 0.28, -34);
+    ctx.lineTo(DRAGON_W * 0.38, -22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(DRAGON_W * 0.42, -22);
+    ctx.lineTo(DRAGON_W * 0.46, -36);
+    ctx.lineTo(DRAGON_W * 0.5, -22);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Eye glow
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(DRAGON_W * 0.42, -10, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffcc00';
+    ctx.shadowBlur = 8; ctx.shadowColor = '#ffaa00';
+    ctx.beginPath(); ctx.arc(DRAGON_W * 0.43, -10, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(DRAGON_W * 0.44, -10, 1.4, 0, Math.PI * 2); ctx.fill();
+
+    // Nostrils (smoke)
+    ctx.fillStyle = '#330000';
+    ctx.beginPath(); ctx.arc(DRAGON_W * 0.55, -2, 1.6, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+}
+
+function drawTrail() {
+    for (const t of trail) {
+        const a = t.life * 0.6;
+        ctx.fillStyle = `rgba(255, 140, 40, ${a})`;
+        ctx.beginPath(); ctx.arc(t.x, t.y, 6 + (1 - t.life) * 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = `rgba(255, 220, 80, ${a * 0.7})`;
+        ctx.beginPath(); ctx.arc(t.x, t.y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+function drawEnemies() {
+    for (const e of enemies) {
+        ctx.save();
+        ctx.translate(e.x, e.y);
+        if (e.flash > 0) {
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = '#fff';
+        }
+        if (e.type === 'castle') drawCastle(e);
+        else if (e.type === 'eagle') drawEagle(e);
+        else if (e.type === 'smalldragon') drawSmallDragon(e);
+        else if (e.type === 'cloud') drawStormCloud(e);
+        ctx.restore();
+    }
+}
+
+function drawCastle(e) {
+    // Castle base
+    ctx.fillStyle = '#6a4a2a';
+    ctx.strokeStyle = '#3a2010';
+    ctx.lineWidth = 3;
+    ctx.fillRect(-e.w / 2, -e.h / 2, e.w, e.h);
+    ctx.strokeRect(-e.w / 2, -e.h / 2, e.w, e.h);
+    // Battlements
+    for (let i = 0; i < 4; i++) {
+        const bx = -e.w / 2 + 4 + i * 22;
+        ctx.fillRect(bx, -e.h / 2 - 10, 14, 12);
+        ctx.strokeRect(bx, -e.h / 2 - 10, 14, 12);
+    }
+    // Door
+    ctx.fillStyle = '#2a100a';
+    ctx.fillRect(-12, e.h / 2 - 26, 24, 26);
+    // Window
+    ctx.fillStyle = '#ffaa22';
+    ctx.fillRect(-22, -10, 10, 14);
+    ctx.fillRect(12,  -10, 10, 14);
+    // HP indicator (small bar)
+    if (e.hp < 3) {
+        ctx.fillStyle = '#440000';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 18, e.w, 4);
+        ctx.fillStyle = '#ff4422';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 18, e.w * (e.hp / 3), 4);
+    }
+}
+
+function drawEagle(e) {
+    const wing = Math.sin(performance.now() * 0.02) * 8;
+    ctx.fillStyle = '#8b5a2b';
+    ctx.strokeStyle = '#3a2010';
+    ctx.lineWidth = 2;
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 22, 12, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Wings
+    ctx.beginPath();
+    ctx.moveTo(-4, -2);
+    ctx.quadraticCurveTo(-20, -20 - wing, 5, -25 - wing);
+    ctx.quadraticCurveTo(15, -10, 10, -2);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-4, 2);
+    ctx.quadraticCurveTo(-20, 20 + wing, 5, 25 + wing);
+    ctx.quadraticCurveTo(15, 10, 10, 2);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Head (faces left, dragon's direction)
+    ctx.fillStyle = '#d4a060';
+    ctx.beginPath();
+    ctx.arc(-22, -2, 10, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Beak
+    ctx.fillStyle = '#ffaa22';
+    ctx.beginPath();
+    ctx.moveTo(-32, -2);
+    ctx.lineTo(-38, 0);
+    ctx.lineTo(-32, 3);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Eye
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(-24, -3, 1.6, 0, Math.PI * 2); ctx.fill();
+}
+
+function drawSmallDragon(e) {
+    const wing = Math.sin(performance.now() * 0.018) * 10;
+    ctx.fillStyle = '#3a8a4a';
+    ctx.strokeStyle = '#1a4022';
+    ctx.lineWidth = 2;
+    // Body
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 22, 12, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Wing
+    ctx.fillStyle = '#2a6a3a';
+    ctx.beginPath();
+    ctx.moveTo(-4, -2);
+    ctx.quadraticCurveTo(-8, -22 - wing, 14, -22 - wing);
+    ctx.quadraticCurveTo(16, -8, 10, -2);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // Head
+    ctx.fillStyle = '#3a8a4a';
+    ctx.beginPath();
+    ctx.ellipse(-22, -2, 12, 9, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Snout
+    ctx.beginPath();
+    ctx.ellipse(-32, 0, 8, 5, 0, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Horn
+    ctx.fillStyle = '#aabb88';
+    ctx.beginPath();
+    ctx.moveTo(-22, -10);
+    ctx.lineTo(-20, -18);
+    ctx.lineTo(-18, -10);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // Eye
+    ctx.fillStyle = '#ffcc00';
+    ctx.beginPath(); ctx.arc(-26, -3, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(-26, -3, 1, 0, Math.PI * 2); ctx.fill();
+    // Tail
+    ctx.strokeStyle = '#1a4022';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(20, 0);
+    ctx.quadraticCurveTo(34, 6, 32, 14);
+    ctx.stroke();
+    // HP bar
+    if (e.hp < 2) {
+        ctx.fillStyle = '#440000';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 8, e.w, 3);
+        ctx.fillStyle = '#ff4422';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 8, e.w * (e.hp / 2), 3);
+    }
+}
+
+function drawStormCloud(e) {
+    // Dark cloud
+    ctx.fillStyle = '#3a3a5a';
+    ctx.strokeStyle = '#1a1a2a';
+    ctx.lineWidth = 2;
+    const r = 24;
+    ctx.beginPath();
+    ctx.arc(-30, 4, r,        0, Math.PI * 2);
+    ctx.arc(-10, -10, r + 4, 0, Math.PI * 2);
+    ctx.arc(15, -4, r + 2,  0, Math.PI * 2);
+    ctx.arc(30, 6, r * 0.85,0, Math.PI * 2);
+    ctx.arc(0, 10, r,        0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Lightning
+    const flicker = Math.sin(performance.now() * 0.02 + e.phase) > 0.6;
+    if (flicker) {
+        ctx.strokeStyle = '#ffee44';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-6, 18);
+        ctx.lineTo(-12, 30);
+        ctx.lineTo(-4, 30);
+        ctx.lineTo(-10, 42);
+        ctx.stroke();
+        ctx.shadowBlur = 12; ctx.shadowColor = '#ffee44';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+    // HP bar
+    if (e.hp < 2) {
+        ctx.fillStyle = '#440000';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 8, e.w, 3);
+        ctx.fillStyle = '#ff4422';
+        ctx.fillRect(-e.w / 2, -e.h / 2 - 8, e.w * (e.hp / 2), 3);
+    }
+}
+
+function drawFireballs() {
+    for (const f of fireballs) {
+        // Outer glow
+        ctx.fillStyle = 'rgba(255,140,40,0.35)';
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r + 8, 0, Math.PI * 2); ctx.fill();
+        // Main
+        ctx.fillStyle = '#ff7722';
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
+        // Hot core
+        ctx.fillStyle = '#ffee66';
+        ctx.beginPath(); ctx.arc(f.x - 2, f.y - 1, f.r * 0.55, 0, Math.PI * 2); ctx.fill();
+        // Trailing flame
+        ctx.fillStyle = 'rgba(255,180,40,0.4)';
+        ctx.beginPath(); ctx.arc(f.x - 14, f.y, f.r * 0.7, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+function drawEnemyProjectiles() {
+    for (const p of enemyProjectiles) {
+        // Arrow-ish
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = '#1a0808';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(p.x + 8, p.y);
+        ctx.lineTo(p.x - 8, p.y - 3);
+        ctx.lineTo(p.x - 8, p.y + 3);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Feathers
+        ctx.fillStyle = '#cc4422';
+        ctx.fillRect(p.x - 12, p.y - 3, 4, 6);
+    }
+}
+
+function drawCoins() {
+    for (const c of coins) {
+        const wobble = Math.sin(c.phase) * 0.3 + 1;
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.scale(wobble, 1);
+        // Glow
+        ctx.fillStyle = c.color;
+        ctx.shadowBlur = 16; ctx.shadowColor = c.color;
+        // Gem shape
+        ctx.beginPath();
+        ctx.moveTo(0, -c.r);
+        ctx.lineTo(c.r, 0);
+        ctx.lineTo(0, c.r);
+        ctx.lineTo(-c.r, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath();
+        ctx.moveTo(-4, -c.r * 0.5);
+        ctx.lineTo(0, -c.r + 2);
+        ctx.lineTo(4, -c.r * 0.5);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+    }
+}
+
+function drawParticles() {
+    for (const s of particles) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, s.life * 2));
+        ctx.fillStyle = s.color;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawPopups() {
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 24px Comic Sans MS, Arial';
+    for (const p of popups) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life / 0.9));
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 4;
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawDamageFlash() {
+    if (damageFlash > 0) {
+        ctx.fillStyle = `rgba(255, 50, 50, ${damageFlash * 0.5})`;
+        ctx.fillRect(0, 0, W, H);
+    }
+}
+
+function drawLevelBanner() {
+    if (!levelBanner) return;
+    const a = Math.min(1, levelBanner.life / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 36px Comic Sans MS, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = levelBanner.text;
+    const padX = 22, padY = 12;
+    const m = ctx.measureText(text);
+    const bw = m.width + padX * 2;
+    const bh = 36 + padY * 2;
+    const bx = W / 2 - bw / 2;
+    const by = H / 2 - bh / 2;
+    ctx.fillStyle = 'rgba(30,5,20,0.85)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+    else                  ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = currentLevel.color;
+    ctx.lineWidth = 4;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+    else                  ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = currentLevel.color;
+    ctx.shadowBlur = 18; ctx.shadowColor = currentLevel.color;
+    ctx.fillText(text, W / 2, H / 2);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'alphabetic';
+}
+
+function render() {
+    drawBg();
+    drawCoins();
+    drawEnemies();
+    drawTrail();
+    drawDragon();
+    drawFireballs();
+    drawEnemyProjectiles();
+    drawParticles();
+    drawPopups();
+    drawDamageFlash();
+    drawLevelBanner();
+}
+
+// ================== Loop ==================
+function loop(t) {
+    if (!running) return;
+    const dt = Math.min((t - lastT) / 1000, 0.05);
+    lastT = t;
+    update(dt);
+    render();
+    if (running) rafId = requestAnimationFrame(loop);
+}
+
+// ================== Menus ==================
+function pickPlayer(name) {
+    const clean = (name || '').trim().slice(0, 20);
+    if (!clean) return;
+    currentPlayer = clean;
+    currentPlayerEl.textContent = currentPlayer;
+    start();
+}
+
+function showPlayerSelect() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    currentPlayer = null;
+    currentPlayerEl.textContent = '—';
+    scoreEl.textContent = '0';
+    livesEl.textContent = '3';
+    levelEl.textContent = '—';
+
+    const recent = Object.entries(loadScores())
+        .map(([name, v]) => ({ name: name, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.lastPlayed - a.lastPlayed)
+        .slice(0, 6);
+    const recentHtml = recent.length === 0 ? '' :
+        '<p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>' +
+        '<div class="recent-grid">' +
+            recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('') +
+        '</div>';
+
+    overlay.innerHTML =
+        '<h2>🐉 דרקון אש</h2>' +
+        '<p>מה השם שלך?</p>' +
+        '<form class="name-form" id="name-form" autocomplete="off">' +
+            '<input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />' +
+            '<button type="submit" class="primary-btn">🔥 שחק</button>' +
+        '</form>' +
+        recentHtml +
+        leaderboardHtml(null);
+    overlay.style.display = 'flex';
+
+    const form  = document.getElementById('name-form');
+    const input = document.getElementById('name-input');
+    form.addEventListener('submit', function (e) { e.preventDefault(); pickPlayer(input.value); });
+    overlay.querySelectorAll('.player-btn').forEach(btn => {
+        btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+    });
+
+    // Render the bg behind the overlay
+    drawBg();
+
+    if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+        setTimeout(() => input.focus(), 50);
+    }
+}
+
+function showGameOver() {
+    const scores = loadScores();
+    const myBest = (scores[currentPlayer] && scores[currentPlayer].best) || 0;
+    const isNewRecord = score === myBest && score > 0;
+    const sorted = allPlayersSorted();
+    const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+    const lvlReached = getLevelFor(score);
+
+    let headline, msg;
+    if (isKing && isNewRecord) {
+        headline = '👑 מלך הדרקונים!';
+        msg = `${currentPlayer} עלה לראש הטבלה עם ${score} נקודות (${lvlReached.name})! 🌟`;
+    } else if (isNewRecord) {
+        headline = '🎉 שיא אישי חדש!';
+        msg = `${currentPlayer} צבר ${score} נקודות, הגיע ל${lvlReached.name}!`;
+    } else if (score >= 30) {
+        headline = '🔥 טיסה אדירה!';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}). השיא: ${myBest}`;
+    } else {
+        headline = '🐉 ניסיון טוב!';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+    }
+
+    overlay.innerHTML =
+        `<h2>${headline}</h2>` +
+        `<p>${msg}</p>` +
+        leaderboardHtml(currentPlayer) +
+        '<div class="end-buttons">' +
+            '<button id="btn-again"  class="primary-btn">🔄 שחק שוב</button>' +
+            '<button id="btn-change" class="secondary-btn">👥 שחקן אחר</button>' +
+        '</div>';
+    overlay.style.display = 'flex';
+
+    document.getElementById('btn-again').addEventListener('click', start);
+    document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+}
+
+function gameOver() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    playGameOver();
+    saveResult(currentPlayer, score);
+    setTimeout(showGameOver, 600);
+}
+
+function start() {
+    if (!currentPlayer) { showPlayerSelect(); return; }
+    overlay.style.display = 'none';
+    ensureAudio();
+    playStart();
+    resetGame();
+    running = true;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(loop);
+    setTimeout(startMusic, 450);
+}
+
+// ================== Mute ==================
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', function () {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+});
+
+// ================== Boot ==================
+drawBg();
+showPlayerSelect();
+</script>
+</body>
+</html>

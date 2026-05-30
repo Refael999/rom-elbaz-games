@@ -249,6 +249,95 @@
         .soon-card h3 { font-size: 1.3em; margin-bottom: 6px; color: rgba(255,255,255,0.7); }
         .soon-card p { font-size: 0.9em; }
 
+        /* ---- Support / donate section ---- */
+        .support-section {
+            text-align: center;
+            margin: 20px auto 10px;
+            padding: 18px 16px;
+            max-width: 480px;
+            background: linear-gradient(135deg, rgba(255,221,87,0.15), rgba(255,92,184,0.15));
+            border: 2px solid var(--neon-yellow);
+            border-radius: 24px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 30px rgba(255,221,87,0.2);
+        }
+        .support-section h3 {
+            font-size: 1.2em;
+            color: var(--neon-yellow);
+            margin-bottom: 6px;
+            text-shadow: 0 0 12px var(--neon-yellow);
+        }
+        .support-section p {
+            font-size: 0.9em;
+            color: rgba(255,255,255,0.85);
+            margin-bottom: 12px;
+        }
+        .donate-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffdd57, #ff8a00);
+            color: #1a1a2e;
+            font-weight: 900;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 1.05em;
+            text-decoration: none;
+            box-shadow: 0 5px 18px rgba(255,221,87,0.4);
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+        .donate-btn:hover, .donate-btn:active {
+            transform: scale(1.08);
+        }
+        .support-note {
+            margin-top: 10px;
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.5);
+            font-style: italic;
+        }
+        #donate-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #donate-modal.open { display: flex; }
+        .donate-modal-content {
+            background: linear-gradient(135deg, #2d1b4e, #1a1a2e);
+            border: 3px solid var(--neon-yellow);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255,221,87,0.3);
+        }
+        .donate-modal-content h3 {
+            color: var(--neon-yellow);
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        .donate-modal-content p {
+            color: white;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .donate-modal-content .close-btn {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 8px 22px;
+            border-radius: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
         /* ---- Footer ---- */
         footer {
             text-align: center;
@@ -282,7 +371,25 @@
 
 <main>
     <div class="games-grid" id="games-grid"></div>
+
+    <!-- Support / donate -->
+    <div class="support-section">
+        <h3>☕ אוהבים את המשחקים?</h3>
+        <p>תמכו ברום עם תרומה קטנה של ₪1 — זה יעזור לי לבנות עוד משחקים מטורפים!</p>
+        <button class="donate-btn" onclick="document.getElementById('donate-modal').classList.add('open')">💛 תרמו ₪1</button>
+        <div class="support-note">* תרומה דרך אבא/אמא — לחצו לפרטים</div>
+    </div>
 </main>
+
+<!-- Donate modal -->
+<div id="donate-modal" onclick="if (event.target.id === 'donate-modal') this.classList.remove('open')">
+    <div class="donate-modal-content">
+        <h3>💛 תודה רבה!</h3>
+        <p>כדי לתרום ₪1 לרום, בקשו מאבא או אמא לפתוח את האפליקציה <strong>Bit</strong> או <strong>PayBox</strong> ולשלוח לטלפון שלהם.</p>
+        <p style="color:#ffdd57;font-weight:bold">בקרוב — אפשרות תרומה ישירה!</p>
+        <button class="close-btn" onclick="document.getElementById('donate-modal').classList.remove('open')">סגור</button>
+    </div>
+</div>
 
 <footer>
     <p>נבנה ע"י <strong>רום</strong> בן 9.5 <span class="rocket">🚀</span></p>
@@ -352,6 +459,176 @@
             file:  'penalty.html',
             tags:  ['ספורט', 'דיוק', '7 שלבים'],
             storageKey: 'rom_penalty_scores_v1',
+        },
+        {
+            title: 'הצפרדע חוצה כביש',
+            desc:  'צפרדע צריכה לחצות כביש סואן ונהר עם בולי עץ! הימנע ממכוניות, קפוץ על בולי עץ, הגע ללוטוסים למעלה 🐸',
+            emoji: '🐸',
+            color: '#4ec55c',     // frog green
+            bg:    'linear-gradient(135deg, #3a7dc2, #4ec55c)',
+            file:  'frog.html',
+            tags:  ['קלאסי', 'אסטרטגיה', '7 שלבים'],
+            storageKey: 'rom_frog_scores_v1',
+        },
+        {
+            title: 'חיתוך פירות',
+            desc:  'גרור עם העכבר או החלק את האצבע - חתוך פירות עפים, אבל היזהר מפצצות! עם קומבו, מיץ עף ו-7 שלבים 🥏',
+            emoji: '🥏',
+            color: '#ff8a00',     // citrus orange
+            bg:    'linear-gradient(135deg, #ff5577, #ffdd57)',
+            file:  'fruits.html',
+            tags:  ['רפלקסים', 'קומבו', '7 שלבים'],
+            storageKey: 'rom_fruits_scores_v1',
+        },
+        {
+            title: 'שובר לבנים',
+            desc:  'הזז את המחבט, שגר את הכדור ושבור את הלבנים הצבעוניות! 7 שלבים שונים, חלקן צריך 2 מכות ⚡',
+            emoji: '🧱',
+            color: '#ff5cb8',     // neon pink
+            bg:    'linear-gradient(135deg, #b85cff, #5cc8ff)',
+            file:  'bricks.html',
+            tags:  ['קלאסי', 'ארקייד', '7 שלבים'],
+            storageKey: 'rom_bricks_scores_v1',
+        },
+        {
+            title: 'פיצוץ בלונים',
+            desc:  'בלונים צבעוניים עולים מלמטה — תפוצץ אותם לפני שיברחו! היזהר מהפצצות 💣',
+            emoji: '🎈',
+            color: '#ff5cb8',     // bright pink
+            bg:    'linear-gradient(135deg, #5cc8ff, #ff5cb8)',
+            file:  'balloons.html',
+            tags:  ['רפלקסים', 'משפחתי', '7 שלבים'],
+            storageKey: 'rom_balloons_scores_v1',
+        },
+        {
+            title: 'משחק זיכרון',
+            desc:  'הפוך שני קלפים — מצא את כל הזוגות! 7 שלבים שגדלים בהדרגה. שובר ראש ומאתגר 🧠',
+            emoji: '🧠',
+            color: '#b85cff',     // neon purple
+            bg:    'linear-gradient(135deg, #2c3e50, #b85cff)',
+            file:  'memory.html',
+            tags:  ['חשיבה', 'פאזל', '7 שלבים'],
+            storageKey: 'rom_memory_scores_v1',
+        },
+        {
+            title: 'מירוץ במהירות',
+            desc:  'נהג את המכונית במהירות, הימנע מרכבים אחרים, אסוף מטבעות והגע רחוק! 7 שלבים מהירים 🏎️',
+            emoji: '🏎️',
+            color: '#ff8a00',     // sunset orange
+            bg:    'linear-gradient(135deg, #ff5577, #ff8a00)',
+            file:  'race.html',
+            tags:  ['ספורט', 'אינסופי', '7 שלבים'],
+            storageKey: 'rom_race_scores_v1',
+        },
+        {
+            title: 'כדור נופל',
+            desc:  'כדור צבעוני נופל דרך מגדל מסתובב — סובב את המגדל בזמן, חמוק מהאזורים האדומים 🟡',
+            emoji: '🟡',
+            color: '#ffdd57',     // bright yellow
+            bg:    'linear-gradient(135deg, #b85cff, #5cc8ff)',
+            file:  'helix.html',
+            tags:  ['רפלקסים', 'ממכר', '7 שלבים'],
+            storageKey: 'rom_helix_scores_v1',
+        },
+        {
+            title: 'מגדל בלוקים',
+            desc:  'הניח כל בלוק בדיוק מעל הקודם — דיוק מושלם = בונוס. כמה גבוה תוכל לבנות? 🏗️',
+            emoji: '🏗️',
+            color: '#5dffb8',     // neon mint
+            bg:    'linear-gradient(135deg, #0f3460, #5dffb8)',
+            file:  'stack.html',
+            tags:  ['דיוק', 'אינסופי', '7 שלבים'],
+            storageKey: 'rom_stack_scores_v1',
+        },
+        {
+            title: 'דרקון אש',
+            desc:  'דרקון אש עף בשמיים, יורה אש על מבצרים ועיטים, אוסף יהלומים. 7 שלבים מתלהבים! 🔥',
+            emoji: '🐉',
+            color: '#ff5577',     // dragon red
+            bg:    'linear-gradient(135deg, #ff5577, #ff8a00)',
+            file:  'dragon.html',
+            tags:  ['פעולה', 'יריות', '7 שלבים'],
+            storageKey: 'rom_dragon_scores_v1',
+        },
+        {
+            title: 'כורה יהלומים',
+            desc:  'חפור עמוק באדמה — מצא יהלומים, רובי, ואבני אש. היזהר מלבה וגובלינים! 💎',
+            emoji: '⛏️',
+            color: '#5cc8ff',     // diamond blue
+            bg:    'linear-gradient(135deg, #4a3520, #5cc8ff)',
+            file:  'miner.html',
+            tags:  ['חקירה', 'הרפתקה', '7 שלבים'],
+            storageKey: 'rom_miner_scores_v1',
+        },
+        {
+            title: 'הוריקן ענק',
+            desc:  'אתה הוריקן! בלע מכוניות, בתים ועוד — וגדל יותר ויותר. אבל היזהר מברקים! 🌪️',
+            emoji: '🌪️',
+            color: '#b85cff',     // storm purple
+            bg:    'linear-gradient(135deg, #4a4e69, #b85cff)',
+            file:  'tornado.html',
+            tags:  ['פעולה', 'יצירתי', '7 שלבים'],
+            storageKey: 'rom_tornado_scores_v1',
+        },
+        {
+            title: 'פלישת חייזרים',
+            desc:  'חייזרים תוקפים! ירה בהם עם הספינה שלך, הגן על כדור הארץ — 7 גלים מתסבכים! 👾',
+            emoji: '👾',
+            color: '#5dffb8',     // alien neon green
+            bg:    'linear-gradient(135deg, #1a1a2e, #5dffb8)',
+            file:  'aliens.html',
+            tags:  ['קלאסי', 'יריות', '7 שלבים'],
+            storageKey: 'rom_aliens_scores_v1',
+        },
+        {
+            title: 'חץ וקשת',
+            desc:  'כוון, טען, שגר! קלע למרכז המטרה. מטרות נעות, רוח, ותפוח על הראש! 🏹',
+            emoji: '🏹',
+            color: '#ffdd57',     // bullseye gold
+            bg:    'linear-gradient(135deg, #2d7d3d, #8b6914)',
+            file:  'archery.html',
+            tags:  ['דיוק', 'אסטרטגיה', '7 שלבים'],
+            storageKey: 'rom_archery_scores_v1',
+        },
+        {
+            title: 'בריחה מהר געש',
+            desc:  'הלבה עולה מלמטה! קפוץ ממדף למדף, ברח כלפי מעלה. אסוף יהלומים בדרך! 🌋',
+            emoji: '🌋',
+            color: '#ff5577',     // lava red
+            bg:    'linear-gradient(135deg, #1a0a0a, #ff5577)',
+            file:  'volcano.html',
+            tags:  ['פלטפורמות', 'הישרדות', '7 שלבים'],
+            storageKey: 'rom_volcano_scores_v1',
+        },
+        {
+            title: 'מסוק במערה',
+            desc:  'החזק כדי לעוף למעלה, שחרר לרדת. עבור במערה צרה, אסוף מטבעות והימנע מבטים ⚡',
+            emoji: '🚁',
+            color: '#5cc8ff',     // sky blue
+            bg:    'linear-gradient(135deg, #87ceeb, #5a4a3a)',
+            file:  'helicopter.html',
+            tags:  ['רפלקסים', 'אינסופי', '7 שלבים'],
+            storageKey: 'rom_helicopter_scores_v1',
+        },
+        {
+            title: 'תמנון רעב',
+            desc:  'תמנון מתחת לים — תפוס דגים, אסוף פנינים, ברח מכרישים. תיק דיו לבריחה! 🌊',
+            emoji: '🐙',
+            color: '#5cc8ff',     // ocean blue
+            bg:    'linear-gradient(135deg, #0a2a3a, #5cc8ff)',
+            file:  'octopus.html',
+            tags:  ['חקירה', 'אקשן', '7 שלבים'],
+            storageKey: 'rom_octopus_scores_v1',
+        },
+        {
+            title: 'רכבת הרים מטורפת',
+            desc:  'החזק להאיץ, שחרר להאט. קפוץ מעל פערים בפסים, אסוף כוכבים באוויר! 🎢',
+            emoji: '🎢',
+            color: '#ff8a00',     // carnival orange
+            bg:    'linear-gradient(135deg, #ff5577, #ffdd57)',
+            file:  'coaster.html',
+            tags:  ['פעולה', 'מהירות', '7 שלבים'],
+            storageKey: 'rom_coaster_scores_v1',
         },
     ];
 

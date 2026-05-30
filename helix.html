@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>כדור נופל 🟡</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
+        body {
+            background: linear-gradient(135deg, #4a148c, #c2185b, #00bcd4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            color: white;
+            padding: 6px;
+            touch-action: none;
+        }
+
+        h1 {
+            font-size: clamp(1em, 3.3vw, 1.6em);
+            margin: 4px 0;
+            color: white;
+            text-shadow: 0 2px 0 #4a148c, 0 0 16px rgba(0,229,255,0.7);
+            text-align: center;
+        }
+
+        #status-bar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .status-pill {
+            font-size: clamp(0.8em, 1.9vw, 1em);
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid #e91e63;
+            border-radius: 25px;
+            color: #311b92;
+            font-weight: bold;
+        }
+        #score   { color: #00bcd4; }
+        #depth   { color: #d500f9; }
+        #level   { color: #ff9100; }
+        #current-player { color: #1a78c2; }
+
+        #game-wrap {
+            position: relative;
+            width:  min(96vw, calc(100vh - 160px));
+            height: min(96vw, calc(100vh - 160px));
+            max-width: 96vw;
+            max-height: calc(100vh - 160px);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: 5px solid #e91e63;
+            border-radius: 18px;
+            box-shadow: 0 0 30px rgba(0,229,255,0.5);
+            background: #1a0033;
+            touch-action: none;
+            cursor: crosshair;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center;
+            background: rgba(20,5,40,0.94);
+            border-radius: 14px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+        #overlay h2 {
+            font-size: clamp(1.1em, 3.8vw, 1.9em);
+            color: #00e5ff;
+            text-shadow: 0 0 14px #00e5ff;
+            margin-bottom: 6px;
+        }
+        #overlay p {
+            font-size: clamp(0.85em, 2.2vw, 1.05em);
+            color: #ffe9f3;
+            margin-bottom: 8px;
+        }
+
+        .name-form { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .name-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: clamp(1em, 2.4vw, 1.1em);
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            border: 3px solid #e91e63;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
+            color: #311b92;
+            text-align: center;
+            outline: none;
+            font-weight: bold;
+        }
+        .name-input::placeholder { color: rgba(49,27,146,0.5); }
+        .name-input:focus { border-color: #00e5ff; }
+
+        .recent-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; width: 100%; max-width: 360px; margin-bottom: 8px; }
+        .player-btn {
+            background: linear-gradient(135deg, #e91e63, #ff9100);
+            color: white;
+            border: none;
+            padding: 8px 6px;
+            font-size: clamp(0.85em, 2.2vw, 1em);
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(233,30,99,0.4);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .player-btn:active { transform: scale(1.08); }
+
+        .end-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        .primary-btn {
+            background: linear-gradient(135deg, #00e5ff, #d500f9);
+            color: white;
+            border: none;
+            padding: 10px 26px;
+            font-size: clamp(0.95em, 2.3vw, 1.1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 5px 18px rgba(0,229,255,0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .secondary-btn {
+            background: rgba(255,255,255,0.18);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 10px 24px;
+            font-size: clamp(0.9em, 2.1vw, 1em);
+            font-weight: bold;
+            border-radius: 24px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .leaderboard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(0,229,255,0.5);
+            border-radius: 10px;
+            padding: 6px 12px;
+            margin: 4px 0 8px;
+            width: 100%;
+            max-width: 320px;
+        }
+        .leaderboard-title { color: #00e5ff; font-size: 0.95em; margin-bottom: 4px; font-weight: bold; }
+        .leaderboard table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: 0.9em; }
+        .leaderboard td { padding: 3px 5px; color: #ffe9f3; }
+        .leaderboard tr.highlight td { background: rgba(0,229,255,0.25); color: white; }
+        .leaderboard tr.highlight td:first-child { border-radius: 6px 0 0 6px; }
+        .leaderboard tr.highlight td:last-child  { border-radius: 0 6px 6px 0; }
+        .leaderboard td:first-child { width: 26px; text-align: center; font-size: 1.1em; }
+        .leaderboard td:last-child  { text-align: left; color: #00e5ff; font-weight: bold; width: 50px; }
+
+        #mute {
+            position: fixed;
+            top: 10px; left: 10px;
+            background: rgba(255,255,255,0.85);
+            border: 3px solid #e91e63;
+            color: #311b92;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mute:active { background: #00e5ff; }
+
+        #hint {
+            margin-top: 5px;
+            color: white;
+            text-shadow: 0 1px 0 #311b92;
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            text-align: center;
+            padding: 0 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<button id="mute" aria-label="השתק">🔊</button>
+
+<h1>🟡 כדור נופל 🌀</h1>
+
+<div id="status-bar">
+    <div class="status-pill">👤 <span id="current-player">—</span></div>
+    <div class="status-pill">⚡ <span id="score">0</span></div>
+    <div class="status-pill">🎯 <span id="level">1</span></div>
+    <div class="status-pill">📏 <span id="depth">0</span></div>
+</div>
+
+<div id="game-wrap">
+    <canvas id="c" width="700" height="700"></canvas>
+    <div id="overlay"></div>
+</div>
+
+<p id="hint">⬅️➡️ או הקלק/לחץ צד למעלה כדי לסובב את המגדל 🌀</p>
+
+<script>
+'use strict';
+
+// ================== Setup ==================
+const canvas  = document.getElementById('c');
+const ctx     = canvas.getContext('2d');
+const overlay = document.getElementById('overlay');
+const scoreEl  = document.getElementById('score');
+const depthEl  = document.getElementById('depth');
+const levelEl  = document.getElementById('level');
+const currentPlayerEl = document.getElementById('current-player');
+
+const W = canvas.width;     // 700
+const H = canvas.height;    // 700
+const BALL_R = 22;
+const BALL_SCREEN_Y = 150;  // fixed screen y for the ball
+const RING_SPACING = 130;   // vertical distance between rings (world units)
+const RING_RX = 230;        // horizontal radius of the elliptical ring
+const RING_RY = 38;         // vertical radius (faux 3D tilt)
+const SEGMENTS = 8;         // segments per ring
+const SEG_ANGLE = Math.PI * 2 / SEGMENTS;
+const TOWER_CX = W / 2;
+
+// ================== Levels ==================
+const LEVELS = [
+    { num: 1, name: 'שלב 1 · קל',         minScore: 0,   scrollSpeed: 110, gaps: 3, dangers: 0, palette: ['#00e5ff', '#1de9b6', '#76ff03'] },
+    { num: 2, name: 'שלב 2 · קל-בינוני',   minScore: 10,  scrollSpeed: 140, gaps: 3, dangers: 1, palette: ['#1de9b6', '#76ff03', '#ffea00'] },
+    { num: 3, name: 'שלב 3 · בינוני',      minScore: 25,  scrollSpeed: 170, gaps: 2, dangers: 1, palette: ['#76ff03', '#ffea00', '#ff9100'] },
+    { num: 4, name: 'שלב 4 · די קשה',      minScore: 45,  scrollSpeed: 200, gaps: 2, dangers: 2, palette: ['#ffea00', '#ff9100', '#ff5722'] },
+    { num: 5, name: 'שלב 5 · קשה',        minScore: 70,  scrollSpeed: 230, gaps: 2, dangers: 2, palette: ['#ff9100', '#e91e63', '#d500f9'] },
+    { num: 6, name: 'שלב 6 · קשה מאוד',   minScore: 100, scrollSpeed: 265, gaps: 2, dangers: 3, palette: ['#e91e63', '#d500f9', '#651fff'] },
+    { num: 7, name: 'שלב 7 · בטירוף 🔥',   minScore: 140, scrollSpeed: 310, gaps: 2, dangers: 3, palette: ['#d500f9', '#651fff', '#00e5ff'] },
+];
+function getLevelFor(score) {
+    for (let i = LEVELS.length - 1; i >= 0; i--) {
+        if (score >= LEVELS[i].minScore) return LEVELS[i];
+    }
+    return LEVELS[0];
+}
+function nextLevelGoal(level) {
+    const next = LEVELS.find(l => l.num === level.num + 1);
+    return next ? next.minScore : null;
+}
+
+// ================== Scoreboard ==================
+const STORAGE_KEY = 'rom_helix_scores_v1';
+let currentPlayer = null;
+
+function loadScores() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+}
+function saveResult(player, finalScore) {
+    const scores = loadScores();
+    const e = scores[player] || { best: 0, games: 0, last: 0 };
+    if (finalScore > e.best) e.best = finalScore;
+    e.games = (e.games || 0) + 1;
+    e.last  = finalScore;
+    e.lastPlayed = Date.now();
+    scores[player] = e;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+}
+function allPlayersSorted() {
+    return Object.entries(loadScores())
+        .map(([name, v]) => ({ name, best: v.best || 0, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.best - a.best || b.lastPlayed - a.lastPlayed);
+}
+function leaderboardHtml(highlight) {
+    const entries = allPlayersSorted().slice(0, 8);
+    if (entries.length === 0) {
+        return '<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><p style="color:#aaa;font-size:0.85em;margin:0">עוד אין שחקנים — אתה תהיה הראשון! 🟡</p></div>';
+    }
+    const medals = ['🥇', '🥈', '🥉'];
+    const rows = entries.map((e, i) => {
+        const rank = i < 3 ? medals[i] : `${i + 1}.`;
+        const clsAttr = e.name === highlight ? ' class="highlight"' : '';
+        return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
+    }).join('');
+    return `<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השיאים</div><table>${rows}</table></div>`;
+}
+
+// ================== Game state ==================
+let running = false;
+let rafId = null;
+
+let rings = [];          // each ring: { worldY, segments: ['solid'|'gap'|'danger'], colors: [...] }
+let towerScroll = 0;     // total world scroll
+let towerRotation = 0;   // radians
+let rotateDir = 0;       // -1, 0, +1
+let nextRingWorldY = 0;
+let ringIdCounter = 0;
+
+let ball = {
+    bounce: 0,        // vertical bounce offset (0..1)
+    bounceVel: 0,
+    color: '#00e5ff',
+    trail: [],
+};
+let particles = [];
+let popups = [];
+let score = 0;
+let depth = 0;
+let streak = 0;
+let bgPhase = 0;
+let lastT = 0;
+let currentLevel = LEVELS[0];
+let levelBanner = null;
+
+function resetGame() {
+    rings = [];
+    particles = [];
+    popups = [];
+    ball.bounce = 0;
+    ball.bounceVel = 0;
+    ball.trail = [];
+    ball.color = '#00e5ff';
+    towerScroll = 0;
+    towerRotation = 0;
+    rotateDir = 0;
+    score = 0;
+    depth = 0;
+    streak = 0;
+    bgPhase = 0;
+    currentLevel = LEVELS[0];
+    levelBanner = { text: '🟡 ' + currentLevel.name, life: 1.8 };
+    nextRingWorldY = BALL_SCREEN_Y + 220;
+    // Pre-spawn rings to fill the canvas below the ball
+    while (nextRingWorldY < H + RING_SPACING * 2) {
+        spawnRing();
+    }
+    scoreEl.textContent = '0';
+    depthEl.textContent = '0';
+    updateLevelUi();
+}
+
+function updateLevelUi() {
+    const goal = nextLevelGoal(currentLevel);
+    levelEl.textContent = goal !== null
+        ? `${currentLevel.num} (${score}/${goal})`
+        : `${currentLevel.num} 🔥`;
+}
+
+// ================== Sound ==================
+let audioCtx = null;
+let muted = false;
+function ensureAudio() {
+    if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+}
+function tone(freq, duration, type, vol, delay) {
+    if (muted) return;
+    const c = ensureAudio();
+    if (!c) return;
+    const t0 = c.currentTime + (delay || 0);
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || 'square';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol == null ? 0.1 : vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain); gain.connect(c.destination);
+    osc.start(t0); osc.stop(t0 + duration);
+}
+function playBounce() {
+    const f = 220 + Math.random() * 120;
+    tone(f, 0.08, 'square', 0.12, 0);
+    tone(f * 0.5, 0.10, 'sine', 0.10, 0.02);
+}
+function playPass() {
+    tone(700, 0.05, 'triangle', 0.10, 0);
+    tone(1000, 0.06, 'triangle', 0.10, 0.04);
+}
+function playPerfect() {
+    tone(523, 0.10, 'triangle', 0.14, 0);
+    tone(659, 0.10, 'triangle', 0.14, 0.08);
+    tone(784, 0.12, 'triangle', 0.14, 0.16);
+    tone(1047, 0.18, 'triangle', 0.16, 0.24);
+}
+function playDanger() {
+    tone(180, 0.30, 'sawtooth', 0.20, 0);
+    tone(120, 0.40, 'sawtooth', 0.18, 0.10);
+}
+function playStart() {
+    tone(523, 0.10, 'triangle', 0.18, 0);
+    tone(659, 0.10, 'triangle', 0.18, 0.10);
+    tone(784, 0.16, 'triangle', 0.18, 0.20);
+}
+function playGameOver() {
+    tone(392, 0.18, 'sawtooth', 0.16, 0);
+    tone(294, 0.18, 'sawtooth', 0.16, 0.18);
+    tone(196, 0.35, 'sawtooth', 0.16, 0.36);
+}
+function playLevelUp() {
+    tone(523, 0.10, 'square', 0.16, 0);
+    tone(659, 0.10, 'square', 0.16, 0.10);
+    tone(784, 0.10, 'square', 0.16, 0.20);
+    tone(1047,0.22, 'square', 0.18, 0.30);
+}
+const MUSIC_NOTES = [523, 659, 784, 880, 784, 659, 523, 440];
+const BASS_NOTES  = [131, 131, 175, 175, 196, 196, 131, 131];
+const NOTE_MS = 220;
+let musicTimer = null, musicStep = 0;
+function playMusicTick() {
+    if (muted) { musicStep++; return; }
+    const i = musicStep % MUSIC_NOTES.length;
+    tone(MUSIC_NOTES[i], NOTE_MS / 1000 * 0.85, 'triangle', 0.05, 0);
+    if (i % 2 === 0) tone(BASS_NOTES[i], NOTE_MS / 1000 * 1.6, 'sine', 0.05, 0);
+    musicStep++;
+}
+function startMusic() {
+    stopMusic(); musicStep = 0;
+    playMusicTick();
+    musicTimer = setInterval(playMusicTick, NOTE_MS);
+}
+function stopMusic() {
+    if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+}
+
+// ================== Ring generation ==================
+function spawnRing() {
+    const segs = new Array(SEGMENTS).fill('solid');
+    const palette = currentLevel.palette;
+    const colors = new Array(SEGMENTS);
+    for (let i = 0; i < SEGMENTS; i++) {
+        colors[i] = palette[Math.floor(Math.random() * palette.length)];
+    }
+    // Place gaps
+    const gapCount = currentLevel.gaps;
+    const indices = [];
+    for (let i = 0; i < SEGMENTS; i++) indices.push(i);
+    // Shuffle
+    for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    let idx = 0;
+    for (let g = 0; g < gapCount && idx < indices.length; g++, idx++) {
+        segs[indices[idx]] = 'gap';
+    }
+    // Place dangers in remaining slots
+    const dangerCount = currentLevel.dangers;
+    for (let d = 0; d < dangerCount && idx < indices.length; d++, idx++) {
+        segs[indices[idx]] = 'danger';
+    }
+    // Safety: guarantee at least one gap
+    if (!segs.includes('gap')) segs[Math.floor(Math.random() * SEGMENTS)] = 'gap';
+
+    rings.push({
+        id: ++ringIdCounter,
+        worldY: nextRingWorldY,
+        segments: segs,
+        colors: colors,
+        passed: false,
+        wasOnPlatform: false,
+    });
+    nextRingWorldY += RING_SPACING;
+}
+
+// ================== Particles ==================
+function burst(x, y, count, color, speed) {
+    for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const s = (speed || 180) * (0.4 + Math.random() * 0.8);
+        particles.push({
+            x, y,
+            vx: Math.cos(a) * s,
+            vy: Math.sin(a) * s,
+            life: 0.45 + Math.random() * 0.4,
+            color,
+            r: 2.5 + Math.random() * 3.5,
+        });
+    }
+}
+function popup(text, x, y, color) {
+    popups.push({ text, x, y, vy: -55, life: 1.0, color: color || '#00e5ff' });
+}
+
+// ================== Input ==================
+const keys = {};
+window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keys[e.key] = true;
+        e.preventDefault();
+    }
+}, { passive: false });
+window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') keys[e.key] = false;
+});
+
+let pointerSide = 0; // -1 left, +1 right
+function pointerSideFromClient(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const cx = (clientX - rect.left) * (W / rect.width);
+    return cx < W / 2 ? +1 : -1; // RTL flip: pressing left of screen rotates one way
+}
+canvas.addEventListener('mousedown', e => {
+    pointerSide = pointerSideFromClient(e.clientX);
+});
+canvas.addEventListener('mousemove', e => {
+    if (e.buttons & 1) pointerSide = pointerSideFromClient(e.clientX);
+});
+window.addEventListener('mouseup', () => { pointerSide = 0; });
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    pointerSide = pointerSideFromClient(t.clientX);
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    pointerSide = pointerSideFromClient(t.clientX);
+}, { passive: false });
+canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    pointerSide = 0;
+}, { passive: false });
+canvas.addEventListener('touchcancel', e => {
+    pointerSide = 0;
+}, { passive: false });
+
+function readRotateDir() {
+    let d = 0;
+    if (keys['ArrowLeft']) d -= 1;
+    if (keys['ArrowRight']) d += 1;
+    if (d === 0) d = pointerSide;
+    return d;
+}
+
+// ================== Update ==================
+const ROT_SPEED = 3.0; // rad/s
+
+function angleForSegmentCenter(i) {
+    // Top of ellipse is at angle -PI/2. Segment 0 starts there.
+    return -Math.PI / 2 + (i + 0.5) * SEG_ANGLE;
+}
+
+// Determine which segment a ball "above" hits. Ball is at fixed screen X = TOWER_CX,
+// at screen Y = BALL_SCREEN_Y. When the ring's screen Y reaches ~BALL_SCREEN_Y,
+// the ball would be at the *top* of the ring ellipse, i.e. angle -PI/2 in ring-local
+// coordinates BEFORE rotation. So the segment the ball collides with is the one whose
+// (centerAngle + towerRotation) is closest to -PI/2.
+function ballSegmentIndex() {
+    // We want i such that centerAngle(i) + rotation ≡ -PI/2 (mod 2PI)
+    // i.e. centerAngle(i) ≡ -PI/2 - rotation
+    let target = -Math.PI / 2 - towerRotation;
+    // normalize to range of centerAngle(0)..
+    let best = 0, bestDiff = Infinity;
+    for (let i = 0; i < SEGMENTS; i++) {
+        let d = angleForSegmentCenter(i) - target;
+        // wrap to [-PI, PI]
+        d = ((d + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+        if (Math.abs(d) < bestDiff) { bestDiff = Math.abs(d); best = i; }
+    }
+    return best;
+}
+
+function update(dt) {
+    bgPhase += dt * 0.35;
+
+    // Rotation input
+    const dir = readRotateDir();
+    towerRotation += dir * ROT_SPEED * dt;
+
+    // Scroll tower
+    const speed = currentLevel.scrollSpeed;
+    towerScroll += speed * dt;
+
+    // Ball bounce animation (purely visual)
+    ball.bounceVel -= 60 * dt; // gravity-ish for the squash
+    ball.bounce += ball.bounceVel * dt;
+    if (ball.bounce < 0) { ball.bounce = 0; ball.bounceVel = 0; }
+
+    // Trail
+    ball.trail.unshift({ y: BALL_SCREEN_Y - ball.bounce * 40, life: 0.35 });
+    if (ball.trail.length > 6) ball.trail.pop();
+    for (const t of ball.trail) t.life -= dt;
+    ball.trail = ball.trail.filter(t => t.life > 0);
+
+    // Determine ring collision
+    // Screen Y of ring i = ring.worldY - towerScroll
+    const segIdx = ballSegmentIndex();
+
+    for (let i = 0; i < rings.length; i++) {
+        const r = rings[i];
+        const screenY = r.worldY - towerScroll;
+
+        // Collision band: ring is passing through ball's Y
+        // The ring's top of ellipse is at screenY (we treat ring center vertically as screenY).
+        // Ball approaches from above, so collision check happens when ball's lower edge is near screenY.
+        const ballLowerY = BALL_SCREEN_Y + BALL_R;
+        const collisionTopY = screenY - RING_RY * 0.4;
+        const collisionBotY = screenY + RING_RY * 0.7;
+
+        if (!r.passed && ballLowerY >= collisionTopY && ballLowerY <= collisionBotY) {
+            const seg = r.segments[segIdx];
+            if (seg === 'danger') {
+                // BOOM
+                burst(TOWER_CX, BALL_SCREEN_Y, 32, '#ff1744', 280);
+                burst(TOWER_CX, BALL_SCREEN_Y, 18, '#ffea00', 200);
+                playDanger();
+                r.passed = true;
+                gameOver();
+                return;
+            } else if (seg === 'solid') {
+                if (!r.wasOnPlatform) {
+                    r.wasOnPlatform = true;
+                    // Bounce!
+                    ball.bounceVel = 9;
+                    streak = 0;
+                    burst(TOWER_CX, BALL_SCREEN_Y + BALL_R, 8, '#ffffff', 140);
+                    playBounce();
+                }
+            } else {
+                // gap — pass through
+                if (!r.passed) {
+                    r.passed = true;
+                    score++;
+                    depth++;
+                    streak++;
+                    scoreEl.textContent = score;
+                    depthEl.textContent = depth;
+                    playPass();
+                    if (streak >= 3) {
+                        score += 3;
+                        scoreEl.textContent = score;
+                        popup('PERFECT! +3', TOWER_CX, BALL_SCREEN_Y - 50, '#ffea00');
+                        burst(TOWER_CX, BALL_SCREEN_Y, 14, '#ffea00', 220);
+                        playPerfect();
+                    } else {
+                        popup('+1', TOWER_CX, BALL_SCREEN_Y - 40, '#00e5ff');
+                    }
+                    const lvl = getLevelFor(score);
+                    if (lvl.num !== currentLevel.num) {
+                        currentLevel = lvl;
+                        levelBanner = { text: lvl.name, life: 2.0 };
+                        ball.color = lvl.palette[0];
+                        playLevelUp();
+                    }
+                    updateLevelUi();
+                }
+            }
+        }
+    }
+
+    // Remove rings that have scrolled off the top
+    rings = rings.filter(r => (r.worldY - towerScroll) > -RING_SPACING);
+
+    // Spawn new rings at bottom
+    while (nextRingWorldY - towerScroll < H + RING_SPACING) {
+        spawnRing();
+    }
+
+    // Particles
+    particles = particles.filter(p => {
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 350 * dt;
+        p.life -= dt;
+        return p.life > 0;
+    });
+
+    // Popups
+    popups = popups.filter(p => {
+        p.y += p.vy * dt;
+        p.life -= dt;
+        return p.life > 0;
+    });
+
+    // Level banner
+    if (levelBanner) {
+        levelBanner.life -= dt;
+        if (levelBanner.life <= 0) levelBanner = null;
+    }
+}
+
+// ================== Render ==================
+function drawBg() {
+    // Level-tinted dark gradient
+    const pal = currentLevel.palette;
+    const t = bgPhase;
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#1a0033');
+    g.addColorStop(0.5, shade(pal[0], -0.65));
+    g.addColorStop(1, '#0a001a');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // Tower axis glow lines
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    const grad = ctx.createLinearGradient(TOWER_CX - 30, 0, TOWER_CX + 30, 0);
+    grad.addColorStop(0, 'rgba(0,229,255,0)');
+    grad.addColorStop(0.5, pal[0]);
+    grad.addColorStop(1, 'rgba(0,229,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(TOWER_CX - 30, 0, 60, H);
+    ctx.restore();
+
+    // Subtle vertical pillar
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(TOWER_CX - 4, 0, 8, H);
+    ctx.restore();
+}
+
+function shade(hex, amt) {
+    // amt -1..1
+    const m = hex.replace('#','');
+    const r = parseInt(m.substring(0,2),16);
+    const g = parseInt(m.substring(2,4),16);
+    const b = parseInt(m.substring(4,6),16);
+    const f = (v) => Math.max(0, Math.min(255, Math.round(v + (amt < 0 ? v * amt : (255 - v) * amt))));
+    const toHex = v => v.toString(16).padStart(2,'0');
+    return '#' + toHex(f(r)) + toHex(f(g)) + toHex(f(b));
+}
+
+function drawRingSegment(screenY, segIdx, type, color) {
+    if (type === 'gap') return;
+
+    const startAngle = -Math.PI / 2 + segIdx * SEG_ANGLE + towerRotation;
+    const endAngle = startAngle + SEG_ANGLE;
+
+    // Draw side (dark) below
+    ctx.save();
+    ctx.translate(TOWER_CX, screenY);
+
+    const sideColor = shade(type === 'danger' ? '#b71c1c' : color, -0.35);
+    const topColor = type === 'danger' ? '#ff1744' : color;
+    const edgeColor = shade(topColor, 0.3);
+
+    // Side band (gives depth)
+    ctx.fillStyle = sideColor;
+    ctx.beginPath();
+    ctx.ellipse(0, 16, RING_RX, RING_RY, 0, startAngle, endAngle);
+    ctx.ellipse(0, 0, RING_RX, RING_RY, 0, endAngle, startAngle, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Top face
+    ctx.fillStyle = topColor;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, RING_RX, RING_RY, 0, startAngle, endAngle);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    // Use inner hole pattern: clip out inner ellipse
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, RING_RX, RING_RY, 0, startAngle, endAngle);
+    ctx.ellipse(0, 0, RING_RX * 0.45, RING_RY * 0.45, 0, endAngle, startAngle, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // Danger warning stripes
+    if (type === 'danger') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(0, 0, RING_RX, RING_RY, 0, startAngle, endAngle);
+        ctx.ellipse(0, 0, RING_RX * 0.45, RING_RY * 0.45, 0, endAngle, startAngle, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.strokeStyle = '#ffea00';
+        ctx.lineWidth = 4;
+        for (let s = -RING_RX; s < RING_RX; s += 14) {
+            ctx.beginPath();
+            ctx.moveTo(s, -RING_RY);
+            ctx.lineTo(s + 22, RING_RY);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // Bright outer edge
+    ctx.strokeStyle = edgeColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, RING_RX, RING_RY, 0, startAngle, endAngle);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawTower() {
+    // Draw rings from back to front (we'll draw each ring's segments)
+    // Sort by screenY so deeper (larger screenY) draw last? Actually rings are stacked
+    // vertically — paint from top to bottom is fine.
+    for (const r of rings) {
+        const screenY = r.worldY - towerScroll;
+        if (screenY < -RING_SPACING || screenY > H + RING_SPACING) continue;
+        for (let i = 0; i < SEGMENTS; i++) {
+            drawRingSegment(screenY, i, r.segments[i], r.colors[i]);
+        }
+    }
+}
+
+function drawBall() {
+    // Trail
+    for (let i = 0; i < ball.trail.length; i++) {
+        const t = ball.trail[i];
+        const alpha = (t.life / 0.35) * 0.4;
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = ball.color;
+        ctx.beginPath();
+        ctx.arc(TOWER_CX, t.y, BALL_R * (0.7 + i * 0.04), 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const y = BALL_SCREEN_Y - ball.bounce * 40;
+    const squash = 1 - Math.min(0.25, ball.bounce * 0.0);
+
+    // Glow halo
+    const grad = ctx.createRadialGradient(TOWER_CX, y, BALL_R * 0.3, TOWER_CX, y, BALL_R * 2.2);
+    grad.addColorStop(0, ball.color);
+    grad.addColorStop(0.4, 'rgba(0,229,255,0.4)');
+    grad.addColorStop(1, 'rgba(0,229,255,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(TOWER_CX, y, BALL_R * 2.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Drop shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(TOWER_CX, y + BALL_R + 10, BALL_R * 0.8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ball body
+    ctx.fillStyle = ball.color;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(TOWER_CX, y, BALL_R, BALL_R * squash, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Specular highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.ellipse(TOWER_CX - BALL_R * 0.35, y - BALL_R * 0.35, BALL_R * 0.25, BALL_R * 0.18, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawParticles() {
+    for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 2));
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawPopups() {
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 28px Comic Sans MS, Arial';
+    for (const p of popups) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 4;
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillText(p.text, p.x, p.y);
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawLevelBanner() {
+    if (!levelBanner) return;
+    const a = Math.min(1, levelBanner.life / 0.4);
+    ctx.globalAlpha = a;
+    ctx.font = 'bold 36px Comic Sans MS, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const text = levelBanner.text;
+    const padX = 22, padY = 12;
+    const m = ctx.measureText(text);
+    const bw = m.width + padX * 2;
+    const bh = 36 + padY * 2;
+    const bx = W / 2 - bw / 2;
+    const by = H / 2 - bh / 2;
+    ctx.fillStyle = 'rgba(20,5,40,0.88)';
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.fill(); }
+    else                  ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeStyle = currentLevel.palette[0];
+    ctx.lineWidth = 4;
+    if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 14); ctx.stroke(); }
+    else                  ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = currentLevel.palette[0];
+    ctx.shadowBlur = 18; ctx.shadowColor = currentLevel.palette[0];
+    ctx.fillText(text, W / 2, H / 2);
+    ctx.shadowBlur = 0;
+    ctx.textBaseline = 'alphabetic';
+    ctx.globalAlpha = 1;
+}
+
+function render() {
+    drawBg();
+    drawTower();
+    drawBall();
+    drawParticles();
+    drawPopups();
+    drawLevelBanner();
+}
+
+// ================== Loop ==================
+function loop(t) {
+    if (!running) return;
+    const dt = Math.min((t - lastT) / 1000, 0.05);
+    lastT = t;
+    update(dt);
+    render();
+    if (running) rafId = requestAnimationFrame(loop);
+}
+
+// ================== Menus ==================
+function pickPlayer(name) {
+    const clean = (name || '').trim().slice(0, 20);
+    if (!clean) return;
+    currentPlayer = clean;
+    currentPlayerEl.textContent = currentPlayer;
+    start();
+}
+
+function showPlayerSelect() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    currentPlayer = null;
+    currentPlayerEl.textContent = '—';
+    scoreEl.textContent = '0';
+    depthEl.textContent = '0';
+    levelEl.textContent = '—';
+
+    const recent = Object.entries(loadScores())
+        .map(([name, v]) => ({ name: name, lastPlayed: v.lastPlayed || 0 }))
+        .sort((a, b) => b.lastPlayed - a.lastPlayed)
+        .slice(0, 6);
+    const recentHtml = recent.length === 0 ? '' :
+        '<p style="margin-bottom:4px;font-size:0.85em">או בחר שחקן קיים:</p>' +
+        '<div class="recent-grid">' +
+            recent.map(r => `<button class="player-btn" data-player="${r.name}">${r.name}</button>`).join('') +
+        '</div>';
+
+    overlay.innerHTML =
+        '<h2>🟡 כדור נופל</h2>' +
+        '<p>מה השם שלך?</p>' +
+        '<form class="name-form" id="name-form" autocomplete="off">' +
+            '<input class="name-input" id="name-input" type="text" maxlength="20" placeholder="כתוב את השם שלך" />' +
+            '<button type="submit" class="primary-btn">🟡 שחק</button>' +
+        '</form>' +
+        recentHtml +
+        leaderboardHtml(null);
+    overlay.style.display = 'flex';
+
+    const form  = document.getElementById('name-form');
+    const input = document.getElementById('name-input');
+    form.addEventListener('submit', function (e) { e.preventDefault(); pickPlayer(input.value); });
+    overlay.querySelectorAll('.player-btn').forEach(btn => {
+        btn.addEventListener('click', () => pickPlayer(btn.dataset.player));
+    });
+
+    drawBg();
+
+    if (window.matchMedia && !window.matchMedia('(pointer: coarse)').matches) {
+        setTimeout(() => input.focus(), 50);
+    }
+}
+
+function showGameOver() {
+    const scores = loadScores();
+    const myBest = (scores[currentPlayer] && scores[currentPlayer].best) || 0;
+    const isNewRecord = score === myBest && score > 0;
+    const sorted = allPlayersSorted();
+    const isKing = sorted.length > 0 && sorted[0].name === currentPlayer && sorted[0].best === score && score > 0;
+    const lvlReached = getLevelFor(score);
+
+    let headline, msg;
+    if (isKing && isNewRecord) {
+        headline = '👑 מלך הכדור!';
+        msg = `${currentPlayer} עלה לראש הטבלה עם ${score} נקודות (${lvlReached.name})! 🌟`;
+    } else if (isNewRecord) {
+        headline = '🎉 שיא אישי חדש!';
+        msg = `${currentPlayer} צבר ${score} נקודות, הגיע ל${lvlReached.name}!`;
+    } else if (score >= 15) {
+        headline = '🏆 ירידה מוצלחת!';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}). השיא: ${myBest}`;
+    } else {
+        headline = '🟡 ניסיון טוב';
+        msg = `${currentPlayer} צבר ${score} נקודות (${lvlReached.name}).<br>השיא שלך: ${myBest}`;
+    }
+
+    overlay.innerHTML =
+        `<h2>${headline}</h2>` +
+        `<p>${msg}</p>` +
+        leaderboardHtml(currentPlayer) +
+        '<div class="end-buttons">' +
+            '<button id="btn-again"  class="primary-btn">🔄 שחק שוב</button>' +
+            '<button id="btn-change" class="secondary-btn">👥 שחקן אחר</button>' +
+        '</div>';
+    overlay.style.display = 'flex';
+
+    document.getElementById('btn-again').addEventListener('click', start);
+    document.getElementById('btn-change').addEventListener('click', showPlayerSelect);
+}
+
+function gameOver() {
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    stopMusic();
+    playGameOver();
+    saveResult(currentPlayer, score);
+    setTimeout(showGameOver, 700);
+}
+
+function start() {
+    if (!currentPlayer) { showPlayerSelect(); return; }
+    overlay.style.display = 'none';
+    ensureAudio();
+    playStart();
+    resetGame();
+    running = true;
+    lastT = performance.now();
+    rafId = requestAnimationFrame(loop);
+    setTimeout(startMusic, 450);
+}
+
+// ================== Mute ==================
+const muteBtn = document.getElementById('mute');
+muteBtn.addEventListener('click', function () {
+    muted = !muted;
+    muteBtn.textContent = muted ? '🔇' : '🔊';
+});
+
+// ================== Boot ==================
+drawBg();
+showPlayerSelect();
+</script>
+</body>
+</html>

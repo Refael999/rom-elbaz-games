@@ -1591,32 +1591,34 @@ function doSwing() {
 function updatePlayer(dt) {
     if (!player || !player.alive) return;
 
+    // Intent: W/S = forward/back (mz>0 forward), A/D = left/right (mx>0 right)
     let mx = 0, mz = 0;
     if (IS_TOUCH && (Math.abs(joyDX) > 0.05 || Math.abs(joyDY) > 0.05)) {
         mx = joyDX;
-        mz = joyDY;
+        mz = -joyDY;   // joystick up = forward
     } else {
-        if (keys['w'] || keys['KeyW'] || keys['arrowup'])    mz -= 1;
-        if (keys['s'] || keys['KeyS'] || keys['arrowdown'])  mz += 1;
-        if (keys['a'] || keys['KeyA'] || keys['arrowleft'])  mx += 1;   // A = strafe left (from player POV)
-        if (keys['d'] || keys['KeyD'] || keys['arrowright']) mx -= 1;   // D = strafe right (from player POV)
+        if (keys['w'] || keys['KeyW'] || keys['arrowup'])    mz += 1;   // W = forward
+        if (keys['s'] || keys['KeyS'] || keys['arrowdown'])  mz -= 1;   // S = back
+        if (keys['a'] || keys['KeyA'] || keys['arrowleft'])  mx -= 1;   // A = left
+        if (keys['d'] || keys['KeyD'] || keys['arrowright']) mx += 1;   // D = right
     }
 
     const len = Math.hypot(mx, mz);
     player.walking = len > 0.05;
     if (player.walking) {
         mx /= len; mz /= len;
-        // Convert to world space relative to camera yaw:
-        // forward = -mz (W) in camera-yaw direction, strafe = +mx
-        const cosY = Math.cos(camYaw), sinY = Math.sin(camYaw);
-        // forward axis (camera looks toward +Z from camera->player, so player forward = -sin(yaw),-cos(yaw))
-        const fwdX = Math.sin(camYaw);
-        const fwdZ = Math.cos(camYaw);
-        const rightX = Math.cos(camYaw);
-        const rightZ = -Math.sin(camYaw);
 
-        const wx = fwdX * (-mz) + rightX * mx;
-        const wz = fwdZ * (-mz) + rightZ * mx;
+        // Use the ACTUAL camera basis vectors from Three.js — robust against any
+        // sign/handedness confusion. Project them to the horizontal (XZ) plane.
+        const cRight = new THREE.Vector3();
+        const cUp    = new THREE.Vector3();
+        const cBack  = new THREE.Vector3();          // points OUT of screen toward viewer
+        camera.matrixWorld.extractBasis(cRight, cUp, cBack);
+        cRight.y = 0; cRight.normalize();
+        const cFwd = new THREE.Vector3(-cBack.x, 0, -cBack.z).normalize();  // forward = -back
+
+        const wx = cFwd.x * mz + cRight.x * mx;
+        const wz = cFwd.z * mz + cRight.z * mx;
         const speed = 5.0;
         let nx = player.x + wx * speed * dt;
         let nz = player.z + wz * speed * dt;

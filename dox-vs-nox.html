@@ -1213,18 +1213,24 @@ function spawnNightEnemies() {
 
 // ================== Input ==================
 window.addEventListener('keydown', e => {
+    // Store BOTH the key character AND the physical code so the game works
+    // with Hebrew, Russian, or any other keyboard layout.
     keys[e.key.toLowerCase()] = true;
-    if (e.key === ' ') { e.preventDefault(); doSwing(); }
-    if (e.key.toLowerCase() === 'b') toggleBuild();
-    if (e.key.toLowerCase() === 'e') tryInteract();
-    if (e.key.toLowerCase() === 'g') tryGiveBone();
+    keys[e.code] = true;
+    if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); doSwing(); }
+    if (e.key.toLowerCase() === 'b' || e.code === 'KeyB') toggleBuild();
+    if (e.key.toLowerCase() === 'e' || e.code === 'KeyE') tryInteract();
+    if (e.key.toLowerCase() === 'g' || e.code === 'KeyG') tryGiveBone();
     if (e.key === 'Escape' && buildMode) toggleBuild();
     if (e.key >= '1' && e.key <= '4' && buildMode) {
         buildIndex = parseInt(e.key, 10) - 1;
         updateBuildBarUi();
     }
 });
-window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+window.addEventListener('keyup', e => {
+    keys[e.key.toLowerCase()] = false;
+    keys[e.code] = false;
+});
 
 canvas.addEventListener('mousedown', e => {
     if (!running) return;
@@ -1590,10 +1596,10 @@ function updatePlayer(dt) {
         mx = joyDX;
         mz = joyDY;
     } else {
-        if (keys['w'] || keys['arrowup'])    mz -= 1;
-        if (keys['s'] || keys['arrowdown'])  mz += 1;
-        if (keys['a'] || keys['arrowleft'])  mx -= 1;
-        if (keys['d'] || keys['arrowright']) mx += 1;
+        if (keys['w'] || keys['KeyW'] || keys['arrowup'])    mz -= 1;
+        if (keys['s'] || keys['KeyS'] || keys['arrowdown'])  mz += 1;
+        if (keys['a'] || keys['KeyA'] || keys['arrowleft'])  mx -= 1;
+        if (keys['d'] || keys['KeyD'] || keys['arrowright']) mx += 1;
     }
 
     const len = Math.hypot(mx, mz);

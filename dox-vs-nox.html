@@ -352,6 +352,189 @@
             display: none;
         }
         body.has-build-ghost #crosshair { display: block; }
+
+        /* --- Tutorial panel --- */
+        #tutorial {
+            position: absolute;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15,30,20,0.88);
+            border: 3px solid #9bff66;
+            border-radius: 14px;
+            padding: 8px 14px;
+            max-width: 90%;
+            text-align: center;
+            z-index: 26;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            display: none;
+        }
+        #tutorial .tut-text { font-size: clamp(0.8em, 2vw, 1.05em); font-weight: bold; color: #eafff0; }
+        #tutorial .tut-skip {
+            display: inline-block; margin-top: 4px;
+            font-size: 0.78em; color: #9bff66; text-decoration: underline;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- Quest tracker --- */
+        #quests {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: rgba(15,30,20,0.78);
+            border: 2px solid rgba(155,255,102,0.7);
+            border-radius: 12px;
+            padding: 6px 10px;
+            z-index: 18;
+            max-width: 46%;
+            font-size: clamp(0.64em, 1.5vw, 0.8em);
+            direction: rtl;
+            display: none;
+        }
+        #quests .q-title { color: #9bff66; font-weight: bold; margin-bottom: 3px; font-size: 1.05em; }
+        .q-row { color: #d8f5d8; padding: 1px 0; line-height: 1.35; }
+        .q-row.done { color: #8fd98f; text-decoration: line-through; opacity: 0.75; }
+        .q-row .q-prog { color: #ffdd57; font-weight: bold; }
+
+        /* --- Toast --- */
+        #toast {
+            position: absolute;
+            top: 64px; left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: rgba(20,40,25,0.92);
+            border: 3px solid #ffdd57;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: clamp(0.9em, 2.4vw, 1.2em);
+            text-shadow: 0 0 10px #ffdd57;
+            z-index: 40;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* --- Minimap --- */
+        #minimap {
+            position: absolute;
+            top: 8px; left: 8px;
+            width: 116px; height: 116px;
+            border-radius: 12px;
+            border: 3px solid rgba(155,255,102,0.8);
+            background: rgba(10,25,15,0.55);
+            z-index: 18;
+            pointer-events: none;
+        }
+        body.touch #minimap { width: 92px; height: 92px; }
+
+        /* --- Boss health bar --- */
+        #boss-bar {
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 70%; max-width: 360px;
+            z-index: 28;
+            text-align: center;
+            display: none;
+        }
+        #boss-bar .boss-name {
+            color: #ff7a7a; font-weight: bold;
+            font-size: clamp(0.85em, 2.3vw, 1.15em);
+            text-shadow: 0 0 10px #ff2222; margin-bottom: 2px;
+        }
+        #boss-bar .boss-track {
+            width: 100%; height: 16px;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid #ff5555;
+            border-radius: 10px; overflow: hidden;
+        }
+        #boss-bar .boss-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #ff3333, #ff8844);
+            transition: width 0.2s;
+        }
+
+        /* --- Inventory / Crafting panels --- */
+        .panel-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10,20,14,0.55);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 45;
+            direction: rtl;
+        }
+        .panel-overlay.show { display: flex; }
+        .panel-box {
+            background: rgba(18,34,24,0.97);
+            border: 4px solid #9bff66;
+            border-radius: 18px;
+            padding: 12px 16px;
+            max-width: 92%;
+            max-height: 88%;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        }
+        .panel-box h3 {
+            color: #9bff66; text-align: center;
+            font-size: clamp(1em, 3vw, 1.4em); margin-bottom: 8px;
+            text-shadow: 0 0 10px #9bff66;
+        }
+        .panel-close {
+            float: left; background: rgba(255,90,90,0.85);
+            color: white; border: none; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 1em; font-weight: bold;
+            cursor: pointer; -webkit-tap-highlight-color: transparent;
+        }
+        .inv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+            gap: 8px; margin-top: 6px; min-width: min(80vw, 340px);
+        }
+        .inv-slot {
+            background: rgba(0,0,0,0.35);
+            border: 2px solid rgba(155,255,102,0.4);
+            border-radius: 12px;
+            padding: 6px 2px; text-align: center;
+        }
+        .inv-slot .inv-emoji { font-size: 1.7em; display: block; }
+        .inv-slot .inv-label { font-size: 0.7em; color: #d8f5d8; }
+        .inv-slot .inv-count { font-size: 1.05em; font-weight: bold; color: #ffdd57; }
+
+        .craft-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; min-width: min(80vw, 340px); }
+        .craft-item {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(0,0,0,0.35);
+            border: 2px solid rgba(155,255,102,0.4);
+            border-radius: 12px; padding: 8px 10px;
+        }
+        .craft-item.locked { opacity: 0.5; border-color: rgba(150,150,150,0.4); }
+        .craft-emoji { font-size: 1.8em; }
+        .craft-info { flex: 1; }
+        .craft-name { font-weight: bold; color: #eafff0; font-size: 0.95em; }
+        .craft-cost { font-size: 0.78em; color: #ffdd57; }
+        .craft-desc { font-size: 0.72em; color: #b8d8b8; }
+        .craft-btn {
+            background: linear-gradient(135deg, #9bff66, #4a7a3a);
+            color: #1a3a1a; border: none; border-radius: 12px;
+            padding: 8px 12px; font-weight: bold; cursor: pointer;
+            -webkit-tap-highlight-color: transparent; font-size: 0.85em;
+        }
+        .craft-btn:disabled { background: rgba(120,120,120,0.5); color: #ddd; cursor: not-allowed; }
+
+        /* extra touch buttons (inventory / craft) */
+        #btn-inv {
+            bottom: 90px; right: 100px;
+            width: 56px; height: 56px;
+            background: rgba(120,90,40,0.8);
+            font-size: 1.4em;
+        }
+        #btn-craft {
+            bottom: 90px; right: 14px;
+            width: 56px; height: 56px;
+            background: rgba(150,80,40,0.8);
+            font-size: 1.4em;
+        }
     </style>
 </head>
 <body>
@@ -379,17 +562,44 @@
 
     <div id="build-bar" style="display:none"></div>
 
+    <canvas id="minimap" width="116" height="116"></canvas>
+    <div id="tutorial"><div class="tut-text"></div><span class="tut-skip">דלג ✖️</span></div>
+    <div id="quests"></div>
+    <div id="toast"></div>
+    <div id="boss-bar">
+        <div class="boss-name">👹</div>
+        <div class="boss-track"><div class="boss-fill"></div></div>
+    </div>
+
     <div id="touch-controls">
         <div id="joystick"><div id="joy-knob"></div></div>
         <div class="touch-btn" id="btn-attack">⚔️</div>
         <div class="touch-btn" id="btn-action">🤝</div>
         <div class="touch-btn" id="btn-build">🏗️</div>
+        <div class="touch-btn" id="btn-inv">🎒</div>
+        <div class="touch-btn" id="btn-craft">🔨</div>
+    </div>
+
+    <div class="panel-overlay" id="inv-panel">
+        <div class="panel-box">
+            <button class="panel-close" data-close="inv">✖️</button>
+            <h3>🎒 התיק שלי</h3>
+            <div class="inv-grid" id="inv-grid"></div>
+        </div>
+    </div>
+
+    <div class="panel-overlay" id="craft-panel">
+        <div class="panel-box">
+            <button class="panel-close" data-close="craft">✖️</button>
+            <h3>🔨 ייצור</h3>
+            <div class="craft-list" id="craft-list"></div>
+        </div>
     </div>
 
     <div id="overlay"></div>
 </div>
 
-<p id="hint">🎮 WASD לזוז · עכבר/גרירה לסובב מצלמה · רווח/קליק לאקסיון 🌳</p>
+<p id="hint">🎮 WASD לזוז · רווח לחטוב · B לבנות · E לאסוף · G לכלב · I תיק · C ייצור 🌳</p>
 
 <script>
 'use strict';
@@ -413,6 +623,18 @@ const todEl    = document.getElementById('time-of-day');
 const currentPlayerEl = document.getElementById('current-player');
 const buildBarEl = document.getElementById('build-bar');
 const nightBannerEl = document.getElementById('night-banner');
+const tutorialEl = document.getElementById('tutorial');
+const questsEl = document.getElementById('quests');
+const toastEl = document.getElementById('toast');
+const minimapEl = document.getElementById('minimap');
+const minimapCtx = minimapEl.getContext('2d');
+const bossBarEl = document.getElementById('boss-bar');
+const bossNameEl = bossBarEl.querySelector('.boss-name');
+const bossFillEl = bossBarEl.querySelector('.boss-fill');
+const invPanelEl = document.getElementById('inv-panel');
+const invGridEl = document.getElementById('inv-grid');
+const craftPanelEl = document.getElementById('craft-panel');
+const craftListEl = document.getElementById('craft-list');
 
 // ================== Characters ==================
 const CHARS = {
@@ -476,6 +698,44 @@ function leaderboardHtml(highlight) {
         return `<tr${clsAttr}><td>${rank}</td><td>${e.name}</td><td>${e.best}</td></tr>`;
     }).join('');
     return `<div class="leaderboard"><div class="leaderboard-title">🏆 טבלת השורדים</div><table>${rows}</table></div>`;
+}
+
+// ================== World save/load ==================
+const SAVE_KEY = 'rom_doxnox_save_v1';
+function hasSave() {
+    try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; }
+}
+function saveWorld() {
+    if (!running || !player || !player.alive) return;
+    try {
+        const data = {
+            v: 1,
+            player: currentPlayer,
+            charKey: currentCharKey,
+            px: player.x, pz: player.z, yaw: player.yaw,
+            hp: player.hp, hunger: player.hunger,
+            wood: player.wood, stone: player.stone, bones: player.bones,
+            food: player.food, cookedFood: player.cookedFood,
+            hasBetterAxe: player.hasBetterAxe,
+            score: score,
+            dayTime: dayTime, nightCount: nightCount,
+            bossSpawnedNight: bossSpawnedNight,
+            dogState: dog ? dog.state : 'friendly',
+            dogX: dog ? dog.x : 5, dogZ: dog ? dog.z : 5,
+            buildings: buildings.map(b => ({ k: b.type, x: b.x, z: b.z, yaw: b.yaw })),
+            campfires: campfires.map(f => ({ x: f.x, z: f.z })),
+            traps: traps.map(t => ({ x: t.x, z: t.z, armed: t.armed })),
+            missions: MISSIONS.map(m => ({ id: m.id, prog: m.prog, done: m.done })),
+            ts: Date.now(),
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch (e) {}
+}
+function loadSaveData() {
+    try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; }
+}
+function clearSave() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
 }
 
 // ================== Sound ==================
@@ -605,13 +865,22 @@ let buildGhostMesh = null;
 let nightSpawnTimer = 0;
 let treeRespawnTimer = 0;
 let boneRespawnTimer = 0;
+let bossActive = null;       // enemy object that is the boss
+let bossSpawnedNight = 0;    // which night the boss was spawned
+let autoSaveTimer = 0;
+let campfires = [];          // { mesh, x, z, light }
+let traps = [];              // { mesh, x, z, armed }
 
 // Build pieces
 const BUILDS = [
-    { key: 'wall',  name: 'קיר עץ',  icon: '🪵', wood: 3, stone: 0, color: 0x8b5a2b, h: 2.4, w: 2.0, d: 0.4 },
-    { key: 'floor', name: 'רצפה',    icon: '⬜', wood: 1, stone: 0, color: 0xa07040, h: 0.2, w: 2.0, d: 2.0 },
-    { key: 'door',  name: 'דלת',     icon: '🚪', wood: 5, stone: 0, color: 0xc08030, h: 2.2, w: 1.2, d: 0.4 },
-    { key: 'swall', name: 'קיר אבן', icon: '🪨', wood: 0, stone: 3, color: 0x9a9a9a, h: 2.4, w: 2.0, d: 0.4 },
+    { key: 'wall',   name: 'קיר עץ',  icon: '🪵', wood: 3, stone: 0, color: 0x8b5a2b, h: 2.4, w: 2.0, d: 0.4 },
+    { key: 'floor',  name: 'רצפה',    icon: '⬜', wood: 1, stone: 0, color: 0xa07040, h: 0.2, w: 2.0, d: 2.0 },
+    { key: 'door',   name: 'דלת',     icon: '🚪', wood: 5, stone: 0, color: 0xc08030, h: 2.2, w: 1.2, d: 0.4 },
+    { key: 'window', name: 'חלון',    icon: '🪟', wood: 2, stone: 0, color: 0x9fd4e8, h: 2.4, w: 2.0, d: 0.3 },
+    { key: 'roof',   name: 'גג',      icon: '🏠', wood: 4, stone: 0, color: 0x7a4020, h: 0.3, w: 2.4, d: 2.4 },
+    { key: 'swall',  name: 'קיר אבן', icon: '🪨', wood: 0, stone: 3, color: 0x9a9a9a, h: 2.4, w: 2.0, d: 0.4 },
+    { key: 'bed',    name: 'מיטה',    icon: '🛏️', wood: 4, stone: 0, color: 0xc04060, h: 0.6, w: 1.2, d: 2.0 },
+    { key: 'chest',  name: 'תיבה',    icon: '📦', wood: 3, stone: 0, color: 0x8a5a30, h: 0.9, w: 1.2, d: 1.0 },
 ];
 
 // Shared geometries / materials (perf)
@@ -907,6 +1176,8 @@ function spawnPlayer() {
         hp: 100, hpMax: 100,
         hunger: 100, hungerMax: 100,
         wood: 0, stone: 0, bones: 0,
+        food: 0, cookedFood: 0,
+        hasBetterAxe: false,
         swingT: 0, walkPhase: 0, walking: false,
         alive: true,
     };
@@ -1047,6 +1318,36 @@ function spawnEnemy(type) {
     enemies.push({ mesh: m, type, x, z, yaw: 0, hp, maxHp: hp, atkCool: 0, hitFlash: 0, swingT: 0 });
 }
 
+// ================== Boss ==================
+function spawnBoss() {
+    // Big wolf-king
+    const m = buildEnemyMesh('wolf');
+    m.scale.set(2.6, 2.6, 2.6);
+    // crown
+    const crown = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.4, 5),
+        new THREE.MeshBasicMaterial({ color: 0xffdd33 }));
+    crown.position.set(0, 1.35, 0.7);
+    m.add(crown);
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const x = side * (WORLD_HALF - 8);
+    const z = (Math.random() * 2 - 1) * (WORLD_HALF - 10);
+    m.position.set(x, 0, z);
+    scene.add(m);
+    const hp = Math.round(600 * currentLevel.enemyHpMul);
+    const boss = {
+        mesh: m, type: 'wolf', x, z, yaw: 0,
+        hp, maxHp: hp, atkCool: 0, hitFlash: 0, swingT: 0,
+        isBoss: true, windup: 0, charge: 0, strafeT: 0,
+    };
+    enemies.push(boss);
+    bossActive = boss;
+    bossNameEl.textContent = '👹 מלך הזאבים';
+    bossFillEl.style.width = '100%';
+    bossBarEl.style.display = 'block';
+    showNightBanner('👹 מלך הזאבים הגיע!');
+    playGrowl();
+}
+
 // ================== Particles ==================
 function spawnParticles(x, y, z, color, n) {
     n = n || 8;
@@ -1103,16 +1404,24 @@ function updateDayNight(dt) {
             BASS_NOTES  = BASS_NOTES_NIGHT;
             playNight();
             spawnNightEnemies();
+            if (nightCount >= 5 && bossSpawnedNight === 0) {
+                bossSpawnedNight = nightCount;
+                spawnBoss();
+            }
+            saveWorld();
         } else {
             showNightBanner('☀️ יום ' + (nightCount + 1));
             MUSIC_NOTES = MUSIC_NOTES_DAY;
             BASS_NOTES  = BASS_NOTES_DAY;
             playDay();
-            // Clear remaining enemies on daybreak
-            for (const e of enemies) {
-                scene.remove(e.mesh);
+            // survived a night
+            missionProgress('nights', nightCount);
+            // Clear remaining enemies on daybreak (boss survives until killed)
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                if (enemies[i].isBoss) continue;
+                scene.remove(enemies[i].mesh);
+                enemies.splice(i, 1);
             }
-            enemies = [];
         }
     }
 
@@ -1201,13 +1510,20 @@ function showNightBanner(text) {
 
 function spawnNightEnemies() {
     const want = currentLevel.enemyCount;
-    for (let i = 0; i < want; i++) {
+    let spawned = 0;
+    while (spawned < want) {
         const r = Math.random();
-        let type;
-        if (currentLevel.num >= 3 && r < 0.2) type = 'bear';
-        else if (r < 0.5) type = 'wolf';
-        else type = 'zombie';
-        spawnEnemy(type);
+        if (currentLevel.num >= 3 && r < 0.18) {
+            spawnEnemy('bear'); spawned++;
+        } else if (r < 0.5) {
+            // wolves hunt in small packs
+            const pack = 1 + Math.floor(Math.random() * 2);
+            for (let p = 0; p < pack && spawned < want; p++) { spawnEnemy('wolf'); spawned++; }
+        } else {
+            // zombies come in larger numbers
+            const horde = 1 + Math.floor(Math.random() * 2);
+            for (let p = 0; p < horde && spawned < want; p++) { spawnEnemy('zombie'); spawned++; }
+        }
     }
 }
 
@@ -1217,14 +1533,21 @@ window.addEventListener('keydown', e => {
     // with Hebrew, Russian, or any other keyboard layout.
     keys[e.key.toLowerCase()] = true;
     keys[e.code] = true;
+    if (e.key === 'Escape') {
+        if (invOpen) { toggleInventory(false); return; }
+        if (craftOpen) { toggleCraft(false); return; }
+        if (buildMode) { toggleBuild(); return; }
+    }
+    if (invOpen || craftOpen) return;   // panels open: ignore game keys
     if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); doSwing(); }
     if (e.key.toLowerCase() === 'b' || e.code === 'KeyB') toggleBuild();
     if (e.key.toLowerCase() === 'e' || e.code === 'KeyE') tryInteract();
     if (e.key.toLowerCase() === 'g' || e.code === 'KeyG') tryGiveBone();
-    if (e.key === 'Escape' && buildMode) toggleBuild();
-    if (e.key >= '1' && e.key <= '4' && buildMode) {
-        buildIndex = parseInt(e.key, 10) - 1;
-        updateBuildBarUi();
+    if (e.key.toLowerCase() === 'i' || e.code === 'KeyI') toggleInventory();
+    if (e.key.toLowerCase() === 'c' || e.code === 'KeyC') toggleCraft();
+    if (e.key >= '1' && e.key <= '9' && buildMode) {
+        const bi = parseInt(e.key, 10) - 1;
+        if (bi < BUILDS.length) { buildIndex = bi; updateBuildBarUi(); spawnBuildGhost(); }
     }
 });
 window.addEventListener('keyup', e => {
@@ -1354,14 +1677,35 @@ canvas.addEventListener('touchend', e => {
 const btnAttack = document.getElementById('btn-attack');
 const btnAction = document.getElementById('btn-action');
 const btnBuild  = document.getElementById('btn-build');
+const btnInv   = document.getElementById('btn-inv');
+const btnCraft = document.getElementById('btn-craft');
 btnAttack.addEventListener('touchstart', e => { e.preventDefault(); if (running) doSwing(); }, { passive: false });
 btnAction.addEventListener('touchstart', e => { e.preventDefault(); if (running) { tryInteract(); tryGiveBone(); if (buildMode) tryPlaceBuilding(); } }, { passive: false });
 btnBuild.addEventListener('touchstart',  e => { e.preventDefault(); if (running) toggleBuild(); }, { passive: false });
+btnInv.addEventListener('touchstart',    e => { e.preventDefault(); if (running) toggleInventory(); }, { passive: false });
+btnCraft.addEventListener('touchstart',  e => { e.preventDefault(); if (running) toggleCraft(); }, { passive: false });
+
+// Panel close buttons + tutorial skip
+document.querySelectorAll('.panel-close').forEach(btn => {
+    const handler = e => {
+        e.preventDefault();
+        if (btn.dataset.close === 'inv') toggleInventory(false);
+        else toggleCraft(false);
+    };
+    btn.addEventListener('click', handler);
+    btn.addEventListener('touchstart', handler, { passive: false });
+});
+const tutSkipEl = tutorialEl.querySelector('.tut-skip');
+tutSkipEl.addEventListener('click', skipTutorial);
+tutSkipEl.addEventListener('touchstart', e => { e.preventDefault(); skipTutorial(); }, { passive: false });
 
 // ================== Build mode ==================
 function toggleBuild() {
+    if (invOpen) toggleInventory(false);
+    if (craftOpen) toggleCraft(false);
     buildMode = !buildMode;
     if (buildMode) {
+        tutorialMark('built');
         buildBarEl.style.display = 'flex';
         updateBuildBarUi();
         spawnBuildGhost();
@@ -1429,19 +1773,68 @@ function tryPlaceBuilding() {
     if (inLake(t.x, t.z)) return;
     player.wood  -= b.wood;
     player.stone -= b.stone;
-    const g = new THREE.BoxGeometry(b.w, b.h, b.d);
-    const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({ color: b.color }));
-    m.position.set(t.x, b.h / 2, t.z);
-    m.rotation.y = t.yaw;
-    scene.add(m);
-    buildings.push({ mesh: m, x: t.x, z: t.z, type: b.key, hp: 100 });
+    addBuilding(b.key, t.x, t.z, t.yaw);
     playBuild();
+    // shelter mission counts wall + swall pieces
+    if (b.key === 'wall' || b.key === 'swall') {
+        const walls = buildings.filter(bb => bb.type === 'wall' || bb.type === 'swall').length;
+        missionProgress('shelter', walls);
+    }
     updateHud();
+}
+
+// Build a structure mesh from its type. Returns the building record.
+function buildingMeshFor(key, x, z, yaw) {
+    const b = BUILDS.find(bb => bb.key === key);
+    if (b) {
+        const g = new THREE.BoxGeometry(b.w, b.h, b.d);
+        const opacity = (key === 'window') ? 0.5 : 1;
+        const m = new THREE.Mesh(g, new THREE.MeshLambertMaterial({
+            color: b.color, transparent: opacity < 1, opacity
+        }));
+        m.position.set(x, b.h / 2, z);
+        m.rotation.y = yaw || 0;
+        return m;
+    }
+    return null;
+}
+
+function addBuilding(key, x, z, yaw) {
+    const m = buildingMeshFor(key, x, z, yaw);
+    if (!m) return null;
+    scene.add(m);
+    const rec = { mesh: m, x, z, yaw: yaw || 0, type: key, hp: 100, open: false };
+    buildings.push(rec);
+    return rec;
+}
+
+// Crafted placeables: campfire & trap, placed in front of player.
+function placeCraftedBuild(kind) {
+    const t = getBuildTarget();
+    placeCraftedAt(kind, t.x, t.z, true);
 }
 
 // ================== Interactions ==================
 function tryInteract() {
     if (!player) return;
+    // Bed: sleep to skip the night (only at night, no enemies very close)
+    for (const b of buildings) {
+        if (b.type !== 'bed') continue;
+        if (Math.hypot(player.x - b.x, player.z - b.z) < 2.0) {
+            if (!isNight) { showToast('🛏️ אפשר לישון רק בלילה'); return; }
+            const enemyNear = enemies.some(e => Math.hypot(e.x - player.x, e.z - player.z) < 8);
+            if (enemyNear) { showToast('😱 יש אויבים קרובים מדי!'); return; }
+            // skip to next morning
+            const phase = dayTime % FULL_CYCLE;
+            dayTime += (FULL_CYCLE - phase) + 0.1;
+            player.hp = Math.min(player.hpMax, player.hp + 35);
+            playDay();
+            spawnParticles(player.x, 1.6, player.z, 0x9bff66, 14);
+            showToast('😴 ישנת! בוקר טוב ☀️');
+            updateHud();
+            return;
+        }
+    }
     // Berries pickup
     for (const bush of bushes) {
         if (!bush.ripe) continue;
@@ -1449,7 +1842,8 @@ function tryInteract() {
             bush.ripe = false;
             bush.regrow = 20;
             for (const br of bush.berries) br.visible = false;
-            player.hunger = Math.min(player.hungerMax, player.hunger + 20);
+            player.food += 2;
+            player.hunger = Math.min(player.hungerMax, player.hunger + 12);
             score += 1;
             playBerry();
             updateHud();
@@ -1478,13 +1872,16 @@ function tryGiveBone() {
     dog.state = 'ally';
     dog.mesh.userData.heart.visible = true;
     playBark();
+    tutorialMark('dog');
+    completeMission('dog');
+    showToast('🐕 הכלב הוא חבר שלך עכשיו! 🦴');
     updateHud();
 }
 
 function doSwing() {
     if (!player) return;
     if (player.swingT > 0) return;
-    player.swingT = 0.3;
+    player.swingT = player.hasBetterAxe ? 0.18 : 0.3;
     playSwing();
 
     // Find chop target in front
@@ -1506,9 +1903,10 @@ function doSwing() {
                 if (tr.hp <= 0) {
                     tr.falling = true;
                     tr.fallT = 0;
-                    const wd = 2 + Math.floor(Math.random() * 3);
+                    const wd = (2 + Math.floor(Math.random() * 3)) * (player.hasBetterAxe ? 2 : 1);
                     player.wood += wd;
                     score += 2;
+                    onWoodCollected(wd);
                     updateHud();
                 }
                 return;
@@ -1545,29 +1943,12 @@ function doSwing() {
         if (dist < range + 0.4) {
             const fwd = (dx * fx + dz * fz) / Math.max(0.001, dist);
             if (fwd > 0.0) {
-                e.hp -= 18;
+                e.hp -= player.hasBetterAxe ? 30 : 18;
                 e.hitFlash = 0.18;
                 playHit();
                 spawnParticles(e.x, 1.2, e.z, 0xff3333, 6);
                 if (e.hp <= 0) {
-                    scene.remove(e.mesh);
-                    enemies.splice(i, 1);
-                    const t = ENEMY_TYPES[e.type];
-                    score += t.scoreVal;
-                    if (Math.random() < 0.4) {
-                        // drop bone
-                        spawnBoneItem(e.x, e.z);
-                    }
-                    if (Math.random() < 0.3) {
-                        player.wood += 1;
-                    }
-                    const lvl = getLevelFor(score);
-                    if (lvl.num !== currentLevel.num) {
-                        currentLevel = lvl;
-                        playLevelUp();
-                        showNightBanner(lvl.name);
-                    }
-                    updateHud();
+                    killEnemy(e, i, true);
                 }
                 return;
             }
@@ -1585,6 +1966,259 @@ function doSwing() {
             }
         }
     }
+}
+
+// ================== Enemy death (shared) ==================
+function killEnemy(e, idx, byPlayer) {
+    scene.remove(e.mesh);
+    if (idx == null) idx = enemies.indexOf(e);
+    if (idx >= 0) enemies.splice(idx, 1);
+    const t = ENEMY_TYPES[e.type] || ENEMY_TYPES.zombie;
+
+    if (e.isBoss) {
+        score += 100;
+        bossActive = null;
+        bossBarEl.style.display = 'none';
+        spawnParticles(e.x, 2, e.z, 0xffdd57, 30);
+        spawnParticles(e.x, 1, e.z, 0xff66aa, 24);
+        playLevelUp();
+        showToast('👑 ניצחת את הבוס! 🎉');
+        completeMission('boss');
+        updateHud();
+        return;
+    }
+
+    score += t.scoreVal;
+    if (Math.random() < 0.4) spawnBoneItem(e.x, e.z);
+    if (Math.random() < 0.3) player.wood += 1;
+    const lvl = getLevelFor(score);
+    if (lvl.num !== currentLevel.num) {
+        currentLevel = lvl;
+        playLevelUp();
+        showNightBanner(lvl.name);
+    }
+    updateHud();
+}
+
+// ================== Toast ==================
+let toastTimer = null;
+function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+}
+
+// ================== Tutorial ==================
+const TUTORIAL_KEY = 'rom_doxnox_tutorial_done';
+let tutorialActive = false;
+let tutorialStep = 0;
+const TUTORIAL_STEPS = [
+    { text: IS_TOUCH ? 'זוז עם הג\'ויסטיק 🕹️' : 'זוז עם WASD או החיצים ⬆️⬇️', flag: 'moved' },
+    { text: IS_TOUCH ? 'תקרב לעץ ולחץ ⚔️ כדי לחטוב עץ 🪓' : 'תקרב לעץ ולחץ רווח כדי לחטוב עץ 🪓', flag: 'chopped' },
+    { text: IS_TOUCH ? 'לחץ 🏗️ כדי לבנות 🏠' : 'לחץ B כדי לבנות 🏠', flag: 'built' },
+    { text: IS_TOUCH ? 'אסוף עצם 🦴 ולחץ 🤝 ליד הכלב' : 'תן עצם לכלב עם G כדי שיהיה חבר 🦴🐕', flag: 'dog' },
+];
+const tutDone = { moved: false, chopped: false, built: false, dog: false };
+
+function startTutorial(force) {
+    let alreadyDone = false;
+    try { alreadyDone = localStorage.getItem(TUTORIAL_KEY) === '1'; } catch (e) {}
+    if (alreadyDone && !force) { tutorialActive = false; tutorialEl.style.display = 'none'; return; }
+    tutorialActive = true;
+    tutorialStep = 0;
+    tutDone.moved = tutDone.chopped = tutDone.built = tutDone.dog = false;
+    tutorialEl.style.display = 'block';
+    renderTutorial();
+}
+function renderTutorial() {
+    if (!tutorialActive || tutorialStep >= TUTORIAL_STEPS.length) {
+        tutorialEl.style.display = 'none';
+        tutorialActive = false;
+        try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
+        return;
+    }
+    tutorialEl.querySelector('.tut-text').textContent =
+        '(' + (tutorialStep + 1) + '/4) ' + TUTORIAL_STEPS[tutorialStep].text;
+}
+function tutorialMark(flag) {
+    if (!tutorialActive) return;
+    if (tutDone[flag]) return;
+    tutDone[flag] = true;
+    if (TUTORIAL_STEPS[tutorialStep] && TUTORIAL_STEPS[tutorialStep].flag === flag) {
+        tutorialStep++;
+        playBerry();
+        renderTutorial();
+    }
+}
+function skipTutorial() {
+    tutorialActive = false;
+    tutorialEl.style.display = 'none';
+    try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
+}
+
+// ================== Missions ==================
+const MISSIONS = [
+    { id: 'wood',  text: 'אסוף 20 עץ 🪓',          goal: 20, prog: 0, done: false, reward: 10 },
+    { id: 'shelter', text: 'בנה מחסה (4 קירות) 🏠', goal: 4,  prog: 0, done: false, reward: 15 },
+    { id: 'dog',   text: 'הפוך את הכלב לחבר 🦴',     goal: 1,  prog: 0, done: false, reward: 12 },
+    { id: 'nights', text: 'שרוד 3 לילות 🌙',        goal: 3,  prog: 0, done: false, reward: 25 },
+    { id: 'boss',  text: 'הבס את הבוס בלילה 5 👹',   goal: 1,  prog: 0, done: false, reward: 50 },
+];
+function getMission(id) { return MISSIONS.find(m => m.id === id); }
+function renderQuests() {
+    let html = '<div class="q-title">📜 משימות</div>';
+    for (const m of MISSIONS) {
+        const check = m.done ? '✅' : '⬜';
+        const prog = (!m.done && m.goal > 1) ? ` <span class="q-prog">${Math.min(m.prog, m.goal)}/${m.goal}</span>` : '';
+        html += `<div class="q-row${m.done ? ' done' : ''}">${check} ${m.text}${prog}</div>`;
+    }
+    questsEl.innerHTML = html;
+}
+function completeMission(id) {
+    const m = getMission(id);
+    if (!m || m.done) return;
+    m.done = true;
+    m.prog = m.goal;
+    score += m.reward;
+    playLevelUp();
+    if (player) spawnParticles(player.x, 1.6, player.z, 0xffdd57, 18);
+    showToast('משימה הושלמה! ✓ +' + m.reward);
+    renderQuests();
+    updateHud();
+}
+function missionProgress(id, value) {
+    const m = getMission(id);
+    if (!m || m.done) return;
+    m.prog = Math.max(m.prog, value);
+    if (m.prog >= m.goal) completeMission(id);
+    else renderQuests();
+}
+// hooks
+function onWoodCollected(amount) {
+    tutorialMark('chopped');
+    if (player) missionProgress('wood', player.wood);
+}
+
+// ================== Inventory UI ==================
+let invOpen = false;
+function buildInvData() {
+    return [
+        { emoji: '🪵', label: 'עץ',     count: player.wood },
+        { emoji: '🪨', label: 'אבן',    count: player.stone },
+        { emoji: '🦴', label: 'עצמות',  count: player.bones },
+        { emoji: '🍓', label: 'פירות',  count: player.food },
+        { emoji: '🍖', label: 'אוכל צלוי', count: player.cookedFood },
+        { emoji: '🪓', label: 'גרזן משופר', count: player.hasBetterAxe ? 1 : 0 },
+    ];
+}
+function renderInventory() {
+    if (!player) return;
+    const data = buildInvData();
+    invGridEl.innerHTML = data.map(d =>
+        `<div class="inv-slot"><span class="inv-emoji">${d.emoji}</span>` +
+        `<span class="inv-count">${d.count}</span>` +
+        `<span class="inv-label">${d.label}</span></div>`
+    ).join('');
+}
+function toggleInventory(force) {
+    if (!running) return;
+    invOpen = (force != null) ? force : !invOpen;
+    if (invOpen) {
+        if (craftOpen) toggleCraft(false);
+        renderInventory();
+        invPanelEl.classList.add('show');
+        tone(660, 0.06, 'sine', 0.08, 0);
+    } else {
+        invPanelEl.classList.remove('show');
+    }
+}
+
+// ================== Crafting ==================
+const RECIPES = [
+    { id: 'axe',     emoji: '🪓', name: 'גרזן משופר', desc: 'חוטב מהר וחזק יותר', wood: 5, stone: 3, food: 0 },
+    { id: 'campfire',emoji: '🔥', name: 'מדורה',      desc: 'מבריחה אויבים ומרפאת', wood: 4, stone: 2, food: 0 },
+    { id: 'trap',    emoji: '🪤', name: 'מלכודת',      desc: 'פוגעת באויב שדורך עליה', wood: 3, stone: 1, food: 0 },
+    { id: 'cooked',  emoji: '🍖', name: 'אוכל צלוי',   desc: 'משביע יותר מפירות', wood: 0, stone: 0, food: 2 },
+];
+let craftOpen = false;
+function canCraft(r) {
+    return player.wood >= r.wood && player.stone >= r.stone && player.food >= r.food;
+}
+function renderCraft() {
+    if (!player) return;
+    craftListEl.innerHTML = RECIPES.map(r => {
+        const ok = canCraft(r);
+        const cost = [];
+        if (r.wood)  cost.push('🪵' + r.wood);
+        if (r.stone) cost.push('🪨' + r.stone);
+        if (r.food)  cost.push('🍓' + r.food);
+        const locked = r.id === 'axe' && player.hasBetterAxe;
+        return `<div class="craft-item${(!ok || locked) ? ' locked' : ''}">
+            <span class="craft-emoji">${r.emoji}</span>
+            <div class="craft-info">
+                <div class="craft-name">${r.name}</div>
+                <div class="craft-cost">${cost.join('  ')}</div>
+                <div class="craft-desc">${locked ? 'כבר יש לך ✔️' : r.desc}</div>
+            </div>
+            <button class="craft-btn" data-r="${r.id}" ${(!ok || locked) ? 'disabled' : ''}>ייצר</button>
+        </div>`;
+    }).join('');
+    craftListEl.querySelectorAll('.craft-btn').forEach(btn => {
+        const handler = e => { e.preventDefault(); doCraft(btn.dataset.r); };
+        btn.addEventListener('click', handler);
+        btn.addEventListener('touchstart', handler, { passive: false });
+    });
+}
+function doCraft(id) {
+    const r = RECIPES.find(x => x.id === id);
+    if (!r || !canCraft(r)) return;
+    if (r.id === 'axe' && player.hasBetterAxe) return;
+    player.wood -= r.wood; player.stone -= r.stone; player.food -= r.food;
+    if (r.id === 'axe') {
+        player.hasBetterAxe = true;
+        showToast('🪓 גרזן משופר מוכן!');
+    } else if (r.id === 'cooked') {
+        player.cookedFood += 1;
+        showToast('🍖 אוכל צלוי מוכן!');
+    } else if (r.id === 'campfire') {
+        placeCraftedBuild('campfire');
+        showToast('🔥 מדורה נבנתה!');
+    } else if (r.id === 'trap') {
+        placeCraftedBuild('trap');
+        showToast('🪤 מלכודת הונחה!');
+    }
+    playBuild();
+    spawnParticles(player.x, 1.4, player.z, 0xffdd57, 10);
+    renderCraft();
+    renderInventory();
+    updateHud();
+}
+function toggleCraft(force) {
+    if (!running) return;
+    craftOpen = (force != null) ? force : !craftOpen;
+    if (craftOpen) {
+        if (invOpen) toggleInventory(false);
+        renderCraft();
+        craftPanelEl.classList.add('show');
+        tone(520, 0.06, 'sine', 0.08, 0);
+    } else {
+        craftPanelEl.classList.remove('show');
+    }
+}
+
+// ================== Eat from inventory (auto when hungry) ==================
+function tryEatFood() {
+    if (!player) return false;
+    if (player.cookedFood > 0 && player.hunger < player.hungerMax - 5) {
+        player.cookedFood--; player.hunger = Math.min(player.hungerMax, player.hunger + 45);
+        playEat(); updateHud(); return true;
+    }
+    if (player.food > 0 && player.hunger < player.hungerMax - 5) {
+        player.food--; player.hunger = Math.min(player.hungerMax, player.hunger + 18);
+        playEat(); updateHud(); return true;
+    }
+    return false;
 }
 
 // ================== Update / movement ==================
@@ -1606,6 +2240,7 @@ function updatePlayer(dt) {
     const len = Math.hypot(mx, mz);
     player.walking = len > 0.05;
     if (player.walking) {
+        tutorialMark('moved');
         mx /= len; mz /= len;
 
         // Use the ACTUAL camera basis vectors from Three.js — robust against any
@@ -1667,6 +2302,7 @@ function updatePlayer(dt) {
 
     // Hunger & HP tick
     player.hunger -= dt * 1.2;
+    if (player.hunger < 25) tryEatFood();   // auto-eat from bag when low
     if (player.hunger < 0) {
         player.hunger = 0;
         player.hp -= dt * 4;
@@ -1792,11 +2428,7 @@ function updateDog(dt) {
                     targetE.hitFlash = 0.15;
                     playBark();
                     if (targetE.hp <= 0) {
-                        scene.remove(targetE.mesh);
-                        const idx = enemies.indexOf(targetE);
-                        if (idx >= 0) enemies.splice(idx, 1);
-                        score += 3;
-                        updateHud();
+                        killEnemy(targetE, null, false);
                     }
                 }
             }
@@ -1835,34 +2467,137 @@ function updateDog(dt) {
     legs[3].rotation.x =  Math.sin(phase) * 0.4;
 }
 
+// Nearest campfire that an enemy should avoid (returns {x,z} or null)
+function nearestCampfireRepel(x, z) {
+    let best = null, bestD = 7; // campfire scares within radius 7
+    for (const f of campfires) {
+        const d = Math.hypot(x - f.x, z - f.z);
+        if (d < bestD) { bestD = d; best = f; }
+    }
+    return best;
+}
+
 function updateEnemies(dt) {
+    const now = performance.now();
     for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
-        const t = ENEMY_TYPES[e.type];
+        const t = ENEMY_TYPES[e.type] || ENEMY_TYPES.zombie;
         const dx = player.x - e.x, dz = player.z - e.z;
-        const dist = Math.hypot(dx, dz);
+        const dist = Math.hypot(dx, dz) || 0.001;
+        const dirX = dx / dist, dirZ = dz / dist;
 
-        if (dist > t.range) {
-            const speed = t.speed;
-            e.x += (dx / Math.max(0.001, dist)) * speed * dt;
-            e.z += (dz / Math.max(0.001, dist)) * speed * dt;
-            e.yaw = Math.atan2(dx, dz);
-        } else {
-            e.atkCool -= dt;
-            if (e.atkCool <= 0) {
-                e.atkCool = 1.2;
-                player.hp -= t.dmg;
-                playHit();
-                spawnParticles(player.x, 1.2, player.z, 0xff2222, 6);
+        // slow status from traps
+        if (e.slowT && e.slowT > 0) e.slowT -= dt;
+        const slowMul = (e.slowT && e.slowT > 0) ? 0.4 : 1;
+
+        // base move vector toward player
+        let mvx = dirX, mvz = dirZ;
+        let speed = t.speed * slowMul;
+
+        if (e.isBoss) {
+            // Boss: charge with telegraphed wind-up
+            speed = t.speed * 1.2 * slowMul;
+            if (e.charge > 0) {
+                e.charge -= dt;
+                speed = t.speed * 3.0 * slowMul;
+            } else if (e.windup > 0) {
+                e.windup -= dt;
+                speed = 0.2; // pause while winding up
+                // flash crown red-ish by bobbing
+                if (e.windup <= 0) { e.charge = 0.8; e.chargeDX = dirX; e.chargeDZ = dirZ; playGrowl(); }
+            } else {
+                e.atkCool -= dt;
+                if (dist < 6 && e.atkCool <= 0) {
+                    e.atkCool = 3.0;
+                    e.windup = 0.7; // telegraph
+                }
+            }
+            if (e.charge > 0) { mvx = e.chargeDX; mvz = e.chargeDZ; }
+        } else if (e.type === 'wolf') {
+            // Wolf: strafe/circle then lunge
+            e.strafeT = (e.strafeT || 0) - dt;
+            if (dist > 6) {
+                // approach
+            } else {
+                // circle the player: add perpendicular component
+                const perpX = -dirZ, perpZ = dirX;
+                const side = (e.circleSide || 1);
+                mvx = dirX * 0.5 + perpX * side;
+                mvz = dirZ * 0.5 + perpZ * side;
+                const ml = Math.hypot(mvx, mvz) || 1; mvx /= ml; mvz /= ml;
+                if (e.strafeT <= 0) { e.strafeT = 1.2 + Math.random(); e.circleSide = Math.random() < 0.5 ? 1 : -1; }
+                // occasional lunge straight in
+                if (dist < 3) { mvx = dirX; mvz = dirZ; speed = t.speed * 1.4; }
+            }
+        } else if (e.type === 'bear') {
+            // Bear: slow approach, charge wind-up
+            if (e.windup > 0) {
+                e.windup -= dt; speed = 0.15;
+                if (e.windup <= 0) { e.charge = 0.7; e.chargeDX = dirX; e.chargeDZ = dirZ; }
+            } else if (e.charge > 0) {
+                e.charge -= dt; speed = t.speed * 2.6;
+                mvx = e.chargeDX; mvz = e.chargeDZ;
+            } else if (dist < 7 && Math.random() < 0.012) {
+                e.windup = 0.6;
             }
         }
+        // zombie: default straight shamble (already mvx/mvz toward player)
+
+        // Campfire avoidance (not boss-immune; boss ignores fire)
+        if (!e.isBoss) {
+            const fire = nearestCampfireRepel(e.x, e.z);
+            if (fire) {
+                const ax = e.x - fire.x, az = e.z - fire.z;
+                const an = Math.hypot(ax, az) || 1;
+                mvx += (ax / an) * 1.6;
+                mvz += (az / an) * 1.6;
+                const ml = Math.hypot(mvx, mvz) || 1; mvx /= ml; mvz /= ml;
+            }
+        }
+
+        if (dist > t.range) {
+            e.x += mvx * speed * dt;
+            e.z += mvz * speed * dt;
+            e.yaw = Math.atan2(mvx, mvz);
+        } else {
+            e.atkCool -= dt;
+            if (e.atkCool <= 0 && !e.windup) {
+                e.atkCool = e.isBoss ? 1.5 : 1.2;
+                const dmg = e.isBoss ? 18 : t.dmg;
+                player.hp -= dmg;
+                playHit();
+                spawnParticles(player.x, 1.2, player.z, 0xff2222, 6);
+                updateHud();
+            }
+        }
+
+        // Trap interaction
+        for (const tr of traps) {
+            if (!tr.armed) continue;
+            if (Math.hypot(e.x - tr.x, e.z - tr.z) < 0.7) {
+                tr.armed = false;
+                tr.mesh.material.color.setHex(0x772222);
+                e.hp -= 25;
+                e.slowT = 3;
+                e.hitFlash = 0.18;
+                playHit();
+                spawnParticles(e.x, 0.5, e.z, 0xffaa33, 8);
+                if (e.hp <= 0) { killEnemy(e, i, false); break; }
+            }
+        }
+        if (!enemies[i]) continue; // killed by trap
 
         e.hitFlash -= dt;
         e.mesh.position.set(e.x, 0, e.z);
         e.mesh.rotation.y = e.yaw;
+        // wind-up shows as a little crouch/jitter
+        const jitter = (e.windup && e.windup > 0) ? Math.sin(now * 0.06) * 0.12 : 0;
+        e.mesh.position.y = Math.abs(Math.sin(now * 0.01 + i)) * 0.08 + jitter;
+    }
 
-        // simple "bobbing" walk
-        e.mesh.position.y = Math.abs(Math.sin(performance.now() * 0.01 + i)) * 0.08;
+    // Boss health bar update
+    if (bossActive) {
+        bossFillEl.style.width = Math.max(0, (bossActive.hp / bossActive.maxHp) * 100) + '%';
     }
 
     nightSpawnTimer -= dt;
@@ -1871,7 +2606,7 @@ function updateEnemies(dt) {
         const r = Math.random();
         let type;
         if (currentLevel.num >= 3 && r < 0.2) type = 'bear';
-        else if (r < 0.5) type = 'wolf';
+        else if (r < 0.45) type = 'wolf';
         else type = 'zombie';
         spawnEnemy(type);
     }
@@ -1900,6 +2635,76 @@ function popupText(msg, color) {
     showNightBanner(msg);
 }
 
+// ================== Campfires ==================
+function updateCampfires(dt) {
+    if (!player) return;
+    for (const f of campfires) {
+        // flicker
+        const fl = 0.9 + Math.sin(performance.now() * 0.02 + f.x) * 0.3;
+        if (f.light) f.light.intensity = fl;
+        if (f.flame) f.flame.scale.y = 0.9 + Math.sin(performance.now() * 0.03 + f.z) * 0.2;
+        // heal & warmth if player near
+        if (Math.hypot(player.x - f.x, player.z - f.z) < 4) {
+            if (player.hp < player.hpMax) player.hp = Math.min(player.hpMax, player.hp + dt * 3);
+        }
+    }
+}
+
+// ================== Minimap ==================
+function updateMinimap() {
+    if (!player) return;
+    const c = minimapCtx;
+    const W = minimapEl.width, H = minimapEl.height;
+    const cx = W / 2, cy = H / 2;
+    const scale = (W / 2) / WORLD_HALF; // world->map
+    c.clearRect(0, 0, W, H);
+    // background
+    c.fillStyle = isNight ? 'rgba(12,16,40,0.6)' : 'rgba(40,80,40,0.55)';
+    c.fillRect(0, 0, W, H);
+
+    function toMap(wx, wz) {
+        return { x: cx + (wx - player.x) * scale, y: cy + (wz - player.z) * scale };
+    }
+    // lake
+    const lp = toMap(LAKE_X, LAKE_Z);
+    c.fillStyle = 'rgba(74,179,228,0.85)';
+    c.beginPath(); c.arc(lp.x, lp.y, LAKE_R * scale, 0, Math.PI * 2); c.fill();
+    // buildings
+    c.fillStyle = '#caa066';
+    for (const b of buildings) {
+        const m = toMap(b.x, b.z);
+        c.fillRect(m.x - 1.5, m.y - 1.5, 3, 3);
+    }
+    // campfires
+    c.fillStyle = '#ff8a1a';
+    for (const f of campfires) { const m = toMap(f.x, f.z); c.beginPath(); c.arc(m.x, m.y, 2, 0, Math.PI*2); c.fill(); }
+    // dog
+    if (dog) {
+        const m = toMap(dog.x, dog.z);
+        c.fillStyle = dog.state === 'ally' ? '#66ff99' : '#d2a06a';
+        c.beginPath(); c.arc(m.x, m.y, 2.5, 0, Math.PI * 2); c.fill();
+    }
+    // enemies
+    for (const e of enemies) {
+        const m = toMap(e.x, e.z);
+        c.fillStyle = e.isBoss ? '#ffdd33' : '#ff3333';
+        c.beginPath(); c.arc(m.x, m.y, e.isBoss ? 4 : 2.5, 0, Math.PI * 2); c.fill();
+    }
+    // player arrow (center)
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(-player.yaw);
+    c.fillStyle = '#ffffff';
+    c.beginPath();
+    c.moveTo(0, -5); c.lineTo(4, 4); c.lineTo(-4, 4); c.closePath();
+    c.fill();
+    c.restore();
+    // border ring
+    c.strokeStyle = 'rgba(155,255,102,0.5)';
+    c.lineWidth = 1;
+    c.strokeRect(0.5, 0.5, W - 1, H - 1);
+}
+
 // ================== HUD ==================
 function updateHud() {
     hpEl.textContent     = Math.round(player.hp);
@@ -1926,6 +2731,11 @@ function disposeWorld() {
     particles = [];
     for (const b of buildings) scene.remove(b.mesh);
     buildings = [];
+    for (const f of campfires) scene.remove(f.mesh);
+    campfires = [];
+    for (const t of traps) scene.remove(t.mesh);
+    traps = [];
+    bossActive = null;
     trees = []; stones = []; bushes = []; boneItems = [];
     if (buildGhostMesh) { scene.remove(buildGhostMesh); buildGhostMesh = null; }
 }
@@ -1942,9 +2752,16 @@ function loop(t) {
     updateDog(dt);
     updateEnemies(dt);
     updateParticles(dt);
+    updateCampfires(dt);
     if (buildMode) updateBuildGhost();
     updateDayNight(dt);
     updateCamera(dt);
+    updateMinimap();
+
+    // auto-save every ~10s
+    autoSaveTimer -= dt;
+    if (autoSaveTimer <= 0) { autoSaveTimer = 10; saveWorld(); }
+
     renderer.render(scene, camera);
     rafId = requestAnimationFrame(loop);
 }
@@ -1974,6 +2791,11 @@ function showPlayerSelect() {
     levelEl.textContent = '—';
     todEl.textContent = '☀️';
     buildBarEl.style.display = 'none';
+    questsEl.style.display = 'none';
+    bossBarEl.style.display = 'none';
+    tutorialEl.style.display = 'none';
+    invPanelEl.classList.remove('show');
+    craftPanelEl.classList.remove('show');
 
     const recent = Object.entries(loadScores())
         .map(([name, v]) => ({ name, lastPlayed: v.lastPlayed || 0 }))
@@ -2009,6 +2831,11 @@ function showPlayerSelect() {
 }
 
 function showCharSelect() {
+    const save = loadSaveData();
+    const canContinue = save && save.player === currentPlayer;
+    const continueBtn = canContinue
+        ? '<button id="btn-continue" class="primary-btn">▶️ המשך משחק (יום ' + ((save.nightCount || 0) + 1) + ')</button>'
+        : '';
     overlay.innerHTML =
         '<h2>🦸 בחר דמות</h2>' +
         `<p>${currentPlayer} — מי אתה היום?</p>` +
@@ -2020,7 +2847,8 @@ function showCharSelect() {
             ).join('') +
         '</div>' +
         '<div class="end-buttons">' +
-            '<button id="btn-start" class="primary-btn">🌳 שחק!</button>' +
+            continueBtn +
+            '<button id="btn-start" class="primary-btn">🌳 משחק חדש!</button>' +
             '<button id="btn-back"  class="secondary-btn">↩️ חזרה</button>' +
         '</div>';
     overlay.style.display = 'flex';
@@ -2032,8 +2860,11 @@ function showCharSelect() {
             btn.classList.add('selected');
         });
     });
-    document.getElementById('btn-start').addEventListener('click', start);
+    document.getElementById('btn-start').addEventListener('click', () => start());
     document.getElementById('btn-back').addEventListener('click', showPlayerSelect);
+    if (canContinue) {
+        document.getElementById('btn-continue').addEventListener('click', () => start(loadSaveData()));
+    }
 }
 
 function showGameOver() {
@@ -2079,10 +2910,17 @@ function gameOver() {
     stopMusic();
     playGameOver();
     saveResult(currentPlayer, score);
+    clearSave();   // run is over, remove the in-progress save
+    questsEl.style.display = 'none';
+    bossBarEl.style.display = 'none';
+    invPanelEl.classList.remove('show');
+    craftPanelEl.classList.remove('show');
     setTimeout(showGameOver, 600);
 }
 
-function start() {
+function start(saveData) {
+    // saveData may be an Event (from button click) — ignore in that case
+    if (saveData && saveData.target) saveData = null;
     if (!currentPlayer) { showPlayerSelect(); return; }
     overlay.style.display = 'none';
     ensureAudio();
@@ -2095,17 +2933,39 @@ function start() {
     dayTime = 0;
     isNight = false;
     nightCount = 0;
+    bossSpawnedNight = 0;
+    bossActive = null;
+    bossBarEl.style.display = 'none';
     buildMode = false;
+    invOpen = false; craftOpen = false;
+    invPanelEl.classList.remove('show');
+    craftPanelEl.classList.remove('show');
     buildBarEl.style.display = 'none';
     document.body.classList.remove('has-build-ghost');
     MUSIC_NOTES = MUSIC_NOTES_DAY;
     BASS_NOTES  = BASS_NOTES_DAY;
     camYaw = 0; camPitch = 0.45;
+    // reset missions
+    for (const m of MISSIONS) { m.prog = 0; m.done = false; }
 
     buildWorld();
     spawnPlayer();
     spawnDog();
     camPos.set(0, 5, 10);
+
+    if (saveData) applySave(saveData);
+
+    // show UI
+    questsEl.style.display = 'block';
+    renderQuests();
+    autoSaveTimer = 0;
+
+    if (saveData) {
+        tutorialActive = false;
+        tutorialEl.style.display = 'none';
+    } else {
+        startTutorial(false);
+    }
 
     updateHud();
 
@@ -2113,6 +2973,81 @@ function start() {
     lastT = performance.now();
     rafId = requestAnimationFrame(loop);
     setTimeout(startMusic, 450);
+}
+
+function applySave(s) {
+    try {
+        if (s.charKey && CHARS[s.charKey]) {
+            currentCharKey = s.charKey;
+            // rebuild player mesh with correct character
+            scene.remove(player.mesh);
+            player.mesh = buildHumanoid(currentCharKey, 1, true);
+            scene.add(player.mesh);
+        }
+        player.x = s.px || 0; player.z = s.pz || 0; player.yaw = s.yaw || 0;
+        player.hp = s.hp != null ? s.hp : 100;
+        player.hunger = s.hunger != null ? s.hunger : 100;
+        player.wood = s.wood || 0; player.stone = s.stone || 0; player.bones = s.bones || 0;
+        player.food = s.food || 0; player.cookedFood = s.cookedFood || 0;
+        player.hasBetterAxe = !!s.hasBetterAxe;
+        player.mesh.position.set(player.x, 0, player.z);
+        player.mesh.rotation.y = player.yaw;
+
+        score = s.score || 0;
+        currentLevel = getLevelFor(score);
+        dayTime = s.dayTime || 0;
+        nightCount = s.nightCount || 0;
+        bossSpawnedNight = s.bossSpawnedNight || 0;
+        isNight = (dayTime % FULL_CYCLE) >= DAY_LEN;
+
+        if (dog) {
+            dog.state = s.dogState || 'friendly';
+            dog.x = s.dogX != null ? s.dogX : dog.x;
+            dog.z = s.dogZ != null ? s.dogZ : dog.z;
+            dog.mesh.position.set(dog.x, 0, dog.z);
+            if (dog.state === 'ally') dog.mesh.userData.heart.visible = true;
+        }
+        // structures
+        if (Array.isArray(s.buildings)) {
+            for (const b of s.buildings) addBuilding(b.k, b.x, b.z, b.yaw || 0);
+        }
+        if (Array.isArray(s.campfires)) {
+            for (const f of s.campfires) placeCraftedAt('campfire', f.x, f.z);
+        }
+        if (Array.isArray(s.traps)) {
+            for (const tr of s.traps) placeCraftedAt('trap', tr.x, tr.z, tr.armed);
+        }
+        if (Array.isArray(s.missions)) {
+            for (const sm of s.missions) {
+                const m = getMission(sm.id);
+                if (m) { m.prog = sm.prog || 0; m.done = !!sm.done; }
+            }
+        }
+    } catch (e) {}
+}
+
+// place crafted item at an explicit world position (used by save load)
+function placeCraftedAt(kind, x, z, armed) {
+    if (kind === 'campfire') {
+        const g = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 0.25, 8),
+            new THREE.MeshLambertMaterial({ color: 0x555555 }));
+        base.position.y = 0.12; g.add(base);
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.8, 7),
+            new THREE.MeshBasicMaterial({ color: 0xff8a1a }));
+        flame.position.y = 0.6; g.add(flame);
+        const light = new THREE.PointLight(0xff8a3a, 1.2, 12);
+        light.position.y = 0.8; g.add(light);
+        g.position.set(x, 0, z);
+        scene.add(g);
+        campfires.push({ mesh: g, x, z, light, flame });
+    } else if (kind === 'trap') {
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.1, 10),
+            new THREE.MeshLambertMaterial({ color: armed === false ? 0x772222 : 0x444444 }));
+        m.position.set(x, 0.06, z);
+        scene.add(m);
+        traps.push({ mesh: m, x, z, armed: armed !== false });
+    }
 }
 
 // ================== Mute / resize ==================
